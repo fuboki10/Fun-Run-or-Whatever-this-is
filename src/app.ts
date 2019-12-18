@@ -7,6 +7,7 @@ import MultipleLightsScene from './scenes/04-MultipleLights';
 import MultiPassLightingsScene from './scenes/05-MultiPassLighting';
 import TexturedMaterialsScene from './scenes/06-TexturedMaterials';
 import ShadowMappingScene from './scenes/07-ShadowMapping';
+import GameScene from './scenes/Game'
 
 // First thing we need is to get the canvas on which we draw our scenes
 const canvas: HTMLCanvasElement = document.querySelector("#app");
@@ -22,7 +23,8 @@ const scenes = {
     "Multiple Lights": MultipleLightsScene,
     "Multi-Pass Lighting": MultiPassLightingsScene,
     "Textured Materials": TexturedMaterialsScene,
-    "Shadow Mapping": ShadowMappingScene
+    "Shadow Mapping": ShadowMappingScene,
+    "Game": GameScene
 };
 const initialScene = "Shadow Mapping";
 
