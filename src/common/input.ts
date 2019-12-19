@@ -68,11 +68,9 @@ export default class Input {
         canvas.addEventListener("mousedown", (ev)=>{
             canvas.focus();
             ev.preventDefault();
-            this.currentButtons[ev.button] = true;
         });
         canvas.addEventListener("mouseup", (ev)=>{
             ev.preventDefault();
-            this.currentButtons[ev.button] = false;
         });
 
         this.currentMousePosition = vec2.fromValues(0, 0);
@@ -80,16 +78,6 @@ export default class Input {
 
         canvas.addEventListener("mousemove", (ev)=>{
             ev.preventDefault();
-            if(this.pointerLocked){
-                this.currentMousePosition[0] += ev.movementX;
-                this.currentMousePosition[1] += ev.movementY;
-            } else {
-                vec2.set(this.currentMousePosition, ev.pageX - canvas.offsetLeft, ev.pageY - canvas.offsetTop);
-            }
-            if(this.firstMouseMove){
-                vec2.copy(this.perviousMousePosition, this.currentMousePosition);
-                this.firstMouseMove = false;
-            }
         });
 
         this.previousWheelPosition = vec3.fromValues(0, 0, 0);
@@ -97,9 +85,6 @@ export default class Input {
 
         canvas.addEventListener("wheel", (ev) => {
             ev.preventDefault();
-            this.currentWheelPosition[0] += ev.deltaX;
-            this.currentWheelPosition[1] += ev.deltaY;
-            this.currentWheelPosition[2] += ev.deltaZ;
         });
 
         canvas.addEventListener("drag", (ev)=>{ev.preventDefault();});
