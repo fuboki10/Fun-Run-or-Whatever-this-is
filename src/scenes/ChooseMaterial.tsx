@@ -79,6 +79,7 @@ interface Object3D {
     modelMatrix: mat4
 };
 
+
 // In this scene we will draw some textured monkeys with multiple lights using blending and multiple shaders
 export default class ChooseMaterialScene extends Scene {
     programs: {[name: string]: ShaderProgram} = {};
@@ -92,16 +93,8 @@ export default class ChooseMaterialScene extends Scene {
     time: number;
     // We will store the lights here
     lights: Light[] = [
-        { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.2, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
-        { type: 'directional', enabled: true, color: vec3.fromValues(0.5,0.5,0.5), direction:vec3.fromValues(-1,-1,-1) },
-        { type: 'point', enabled: true, color: vec3.fromValues(1,0,0), position:vec3.fromValues(+6,+1,+0), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0 },
-        { type: 'point', enabled: true, color: vec3.fromValues(0,1,0), position:vec3.fromValues(-6,+1,+0), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0 },
-        { type: 'point', enabled: true, color: vec3.fromValues(0,0,1), position:vec3.fromValues(+0,+1,+6), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0 },
-        { type: 'point', enabled: true, color: vec3.fromValues(1,1,0), position:vec3.fromValues(+0,+1,-6), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0 },
-        { type: 'spot', enabled: true, color: vec3.fromValues(5,0,0), position:vec3.fromValues(+3,+1,+3), direction:vec3.fromValues(-1,0,-1), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0, inner_cone: 0.25*Math.PI, outer_cone: 0.3*Math.PI },
-        { type: 'spot', enabled: true, color: vec3.fromValues(0,5,0), position:vec3.fromValues(-3,+1,+3), direction:vec3.fromValues(+1,0,-1), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0, inner_cone: 0.25*Math.PI, outer_cone: 0.3*Math.PI  },
-        { type: 'spot', enabled: true, color: vec3.fromValues(0,0,5), position:vec3.fromValues(+3,+1,-3), direction:vec3.fromValues(-1,0,+1), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0, inner_cone: 0.25*Math.PI, outer_cone: 0.3*Math.PI  },
-        { type: 'spot', enabled: true, color: vec3.fromValues(5,5,0), position:vec3.fromValues(-3,+1,-3), direction:vec3.fromValues(+1,0,+1), attenuation_quadratic:1, attenuation_linear:0, attenuation_constant:0, inner_cone: 0.25*Math.PI, outer_cone: 0.3*Math.PI  },
+        { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
+        { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1) },
     ];
 
     // And we will store the objects here
@@ -132,13 +125,24 @@ export default class ChooseMaterialScene extends Scene {
             ["wood.roughness"]:{url:'images/Wood/roughness.jpg', type:'image'},
             ["wood.specular"]:{url:'images/Wood/specular.jpg', type:'image'},
             ["wood.ao"]:{url:'images/Wood/ao.jpg', type:'image'},
-            ["suzanne.ao"]:{url:'images/Suzanne/ambient_occlusion.jpg', type:'image'},
+            ["snow.albedo"]:{url:'images/Snow/albedo.jpg', type:'image'},
+            ["snow.roughness"]:{url:'images/Snow/roughness.jpg', type:'image'},
+            ["snow.specular"]:{url:'images/Snow/specular.jpg', type:'image'},
+            ["snow.ao"]:{url:'images/Snow/ao.jpg', type:'image'},
         });
     } 
     
     public start(): void {
         this.currM = 0;
         this.time = 0;
+        const canvas: HTMLCanvasElement = document.querySelector("#text");
+        const ctx = canvas.getContext("2d");
+        ctx.font = "35px Squada One";
+        ctx.fillStyle = "WHITE";
+        ctx.textAlign = "center";
+        ctx.fillText("CHOOSE THE PLAYER'S MATERIAL", canvas.width/2, canvas.height/4);
+        ctx.font = "25px Squada One";
+        ctx.fillText("USE ARROWS TO CHANGE MATERIAL", canvas.width/2, 3*canvas.height/4);
         document.addEventListener("keydown", (ev)=>{
 
             switch(ev.key){
@@ -186,6 +190,10 @@ export default class ChooseMaterialScene extends Scene {
         this.textures['wood.roughness'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['wood.roughness']);
         this.textures['wood.specular'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['wood.specular']);
         this.textures['wood.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['wood.ao']);
+        this.textures['snow.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.albedo']);
+        this.textures['snow.roughness'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.roughness']);
+        this.textures['snow.specular'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.specular']);
+        this.textures['snow.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.ao']);
         this.textures['ground.albedo'] = TextureUtils.CheckerBoard(this.gl, [1024, 1024], [256, 256], [26, 26, 26, 255], [196, 196, 196, 255]);
         this.textures['ground.specular'] = TextureUtils.CheckerBoard(this.gl, [1024, 1024], [256, 256], [255, 255, 255, 255], [64, 64, 64, 255]);
         this.textures['ground.roughness'] = TextureUtils.CheckerBoard(this.gl, [1024, 1024], [256, 256], [52, 52, 52, 255], [245, 245, 245, 255]);
@@ -237,7 +245,17 @@ export default class ChooseMaterialScene extends Scene {
                 emissive: this.textures['black'],
                 emissive_tint: vec3.fromValues(1, 1, 1),
                 ambient_occlusion: this.textures['wood.ao']});
-                    
+
+        this.materials.push({
+                albedo: this.textures['snow.albedo'],
+                albedo_tint: vec3.fromValues(1, 1, 1),
+                specular: this.textures['snow.specular'],
+                specular_tint: vec3.fromValues(1, 1, 1),
+                roughness: this.textures['snow.roughness'],
+                roughness_scale: 1,
+                emissive: this.textures['black'],
+                emissive_tint: vec3.fromValues(1, 1, 1),
+                ambient_occlusion: this.textures['snow.ao']});          
                 
         // Create the 3D ojbects
        /* this.objects['ground'] = {
@@ -293,7 +311,6 @@ export default class ChooseMaterialScene extends Scene {
         // Use a dark grey clear color
         this.gl.clearColor(0.1,0.1,0.1,1);
 
-        this.setupControls();
     }
     
     public draw(deltaTime: number): void {
@@ -397,36 +414,12 @@ export default class ChooseMaterialScene extends Scene {
         for(let key in this.meshes)
             this.meshes[key].dispose();
         this.meshes = {};
-        this.clearControls();
     }
 
 
     /////////////////////////////////////////////////////////
     ////// ADD CONTROL TO THE WEBPAGE (NOT IMPORTNANT) //////
     /////////////////////////////////////////////////////////
-    private setupControls() {
-        const controls = document.querySelector('#controls');
-        
-        
-
-        controls.appendChild(
-            <div>
-                <div className="control-row">
-                    <label className="control-label">Lights</label>
-                    {this.lights.map((light)=>{
-                        return <CheckBox value={light.enabled} onchange={(v)=>{light.enabled=v;}}/>
-                    })}
-                </div>
-            </div>
-            
-        );
-        
-    }
-
-    private clearControls() {
-        const controls = document.querySelector('#controls');
-        controls.innerHTML = "";
-    }
-
+   
 
 }

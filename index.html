@@ -4,14 +4,14 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Gfx Lab</title>
+    <title>FUN RUN OR WHATEVER IS THIS</title>
     <link rel="stylesheet" href="./style.scss">
+    <link href="https://fonts.googleapis.com/css?family=Squada+One&display=swap" rel="stylesheet">
 </head>
 <body>
-    <div>
-        <canvas width="960" height="540" id="app" tabindex="1">
-            <!-- Here is where we will draw our scene -->
-        </canvas>
+    <div class="container">
+        <canvas width="540" height="720" id="app" tabindex="1"></canvas>
+        <canvas width="540" height="720" id="text"></canvas>
     </div>
     <div>
         <span>Scene: </span>
@@ -20,5 +20,6 @@
     <div id="controls"></div>
     <!-- The following line includes our script which will run WebGL -->
     <script src="./src/app.ts"></script>
+    
 </body>
 </html>

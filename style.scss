@@ -1,3 +1,13 @@
+.container {
+    position: relative;
+}
+ 
+#text {
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    z-index: 10;
+}
 #controls {
     padding: 16px;
 }
