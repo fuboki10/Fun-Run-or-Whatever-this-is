@@ -30,7 +30,7 @@ const scenes = {
     "Shadow Mapping": ShadowMappingScene,
     "Game": GameScene
 };
-const initialScene = "Track";
+const initialScene = "Choose Material";
 
 // Then we add those scenes to the game object and ask it to start the initial scene
 game.addScenes(scenes);

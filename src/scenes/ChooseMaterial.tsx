@@ -133,6 +133,26 @@ export default class ChooseMaterialScene extends Scene {
     } 
     
     public start(): void {
+        document.addEventListener("keydown", (ev)=>{
+            if(this.game.currentScene == this.game.scenes["Choose Material"])
+            {
+            switch(ev.key){
+                
+                case Key.Enter:
+                    this.game.playerMat = this.materials[this.currM];
+                    this.game.startScene("Track");
+                    break;
+                case Key.ArrowLeft:
+                    this.currM = (this.currM - 1 + this.materials.length) % this.materials.length;
+                    break;
+                case Key.ArrowRight:
+                    this.currM = (this.currM + 1) % this.materials.length;
+                    break;
+                case ' ':
+                    ev.preventDefault();
+            }
+            }
+        })
         this.currM = 0;
         this.time = 0;
         const canvas: HTMLCanvasElement = document.querySelector("#text");
@@ -143,25 +163,7 @@ export default class ChooseMaterialScene extends Scene {
         ctx.fillText("CHOOSE THE PLAYER'S MATERIAL", canvas.width/2, canvas.height/4);
         ctx.font = "25px Squada One";
         ctx.fillText("USE ARROWS TO CHANGE MATERIAL", canvas.width/2, 3*canvas.height/4);
-        document.addEventListener("keydown", (ev)=>{
-
-            switch(ev.key){
-                case Key.ArrowUp:
-                    break;
-                case Key.ArrowDown:
-                    break;
-                case Key.ArrowLeft:
-                    this.currM = (this.currM - 1 + this.materials.length) % this.materials.length;
-                    console.log(this.currM);
-                    break;
-                case Key.ArrowRight:
-                    this.currM = (this.currM + 1) % this.materials.length;
-                    console.log(this.currM);
-                    break;
-                case ' ':
-                    ev.preventDefault();
-            }
-        }
+     
         // For each light type, compile and link a shader
         for(let type of ['ambient', 'directional', 'point', 'spot']){
             this.programs[type] = new ShaderProgram(this.gl);
@@ -257,22 +259,6 @@ export default class ChooseMaterialScene extends Scene {
                 emissive_tint: vec3.fromValues(1, 1, 1),
                 ambient_occlusion: this.textures['snow.ao']});          
                 
-        // Create the 3D ojbects
-       /* this.objects['ground'] = {
-            mesh: this.meshes['ground'],
-            material: {
-                albedo: this.textures['ground.albedo'],
-                albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['ground.specular'],
-                specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['ground.roughness'],
-                roughness_scale: 1,
-                emissive: this.textures['black'],
-                emissive_tint: vec3.fromValues(1, 1, 1),
-                ambient_occlusion: this.textures['white']
-            },
-            modelMatrix: mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, 0), vec3.fromValues(100, 1, 100))
-        };*/
 
         this.objects['player'] = {
             mesh: this.meshes['player'],

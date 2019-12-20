@@ -27,7 +27,7 @@ export default class Game {
     nextScene: Scene = null; // The scene that will replace the current scene after its files have been loaded
     nextSceneReady: boolean = false; // Whether the files requested by the next scene has been loaded or not 
     lastTick: number; // The time of the last frame in milliseconds (used to calculate delta time)
-
+    playerMat : any;
     constructor(canvas: HTMLCanvasElement){
         this.canvas = canvas;
         this.gl = this.canvas.getContext("webgl2", {

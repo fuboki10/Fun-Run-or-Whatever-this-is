@@ -88,6 +88,7 @@ export default class TrackScene extends Scene {
     samplers: {[name: string]: WebGLSampler} = {};
     materials: Material[] = [];
     time: number;
+    move:boolean;
 
     lights: Light[] = [
         { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
@@ -130,6 +131,26 @@ export default class TrackScene extends Scene {
     
     public start(): void {
         this.time = 0;
+        document.addEventListener("keydown", (ev)=>{
+            switch(ev.key){
+                case Key.Enter:
+                    console.log('a7a enter down');
+                    this.move = true;
+                    break;
+                case ' ':
+                    ev.preventDefault();
+            }
+        })
+        document.addEventListener("keyup", (ev)=>{
+            switch(ev.key){
+                case Key.Enter:
+                    console.log('a7a enter up');
+                    this.move = false;
+                    break;
+                case ' ':
+                    ev.preventDefault();
+            }
+        })
         // For each light type, compile and link a shader
         for(let type of ['ambient', 'directional', 'point', 'spot']){
             this.programs[type] = new ShaderProgram(this.gl);
@@ -170,70 +191,17 @@ export default class TrackScene extends Scene {
 
 
 
-        this.materials.push({
-                albedo: this.textures['bricks.albedo'],
-                albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['bricks.specular'],
-                specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['bricks.roughness'],
-                roughness_scale: 1,
-                emissive: this.textures['black'],
-                emissive_tint: vec3.fromValues(1, 1, 1),
-                ambient_occlusion: this.textures['bricks.ao']});
-
-        this.materials.push({
-                albedo: this.textures['tire.albedo'],
-                albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['tire.specular'],
-                specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['tire.roughness'],
-                roughness_scale: 1,
-                emissive: this.textures['black'],
-                emissive_tint: vec3.fromValues(1, 1, 1),
-                ambient_occlusion: this.textures['tire.ao']});
-
-        this.materials.push({
-                albedo: this.textures['rune.albedo'],
-                albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['rune.specular'],
-                specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['rune.roughness'],
-                roughness_scale: 1,
-                emissive: this.textures['black'],
-                emissive_tint: vec3.fromValues(1, 1, 1),
-                ambient_occlusion: this.textures['rune.ao']});
-
-        this.materials.push({
-                albedo: this.textures['wood.albedo'],
-                albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['wood.specular'],
-                specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['wood.roughness'],
-                roughness_scale: 1,
-                emissive: this.textures['black'],
-                emissive_tint: vec3.fromValues(1, 1, 1),
-                ambient_occlusion: this.textures['wood.ao']});
-
-        this.materials.push({
-                albedo: this.textures['snow.albedo'],
-                albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['snow.specular'],
-                specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['snow.roughness'],
-                roughness_scale: 1,
-                emissive: this.textures['black'],
-                emissive_tint: vec3.fromValues(1, 1, 1),
-                ambient_occlusion: this.textures['snow.ao']});          
+                  
                 
         // Create the 3D ojbects
        this.objects['ground'] = {
             mesh: this.meshes['ground'],
             material: {
-                albedo: this.textures['ground.albedo'],
+                albedo: this.textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['ground.specular'],
+                specular: this.textures['snow.specular'],
                 specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['ground.roughness'],
+                roughness: this.textures['snow.roughness'],
                 roughness_scale: 1,
                 emissive: this.textures['black'],
                 emissive_tint: vec3.fromValues(1, 1, 1),
@@ -244,7 +212,7 @@ export default class TrackScene extends Scene {
 
         this.objects['player'] = {
             mesh: this.meshes['player'],
-            material: this.materials['player'],
+            material: this.game.playerMat,
             modelMatrix: mat4.create()
         };
 
@@ -261,7 +229,7 @@ export default class TrackScene extends Scene {
         // Create a camera and a controller
         this.camera = new Camera();
         this.camera.type = 'perspective';
-        this.camera.position = vec3.fromValues(0,3,2);
+        this.camera.position = vec3.fromValues(0,5,3);
         this.camera.direction = vec3.fromValues(0,-1,-1);
         this.camera.aspectRatio = this.gl.drawingBufferWidth/this.gl.drawingBufferHeight;
         
@@ -281,12 +249,17 @@ export default class TrackScene extends Scene {
 
     }
     
-    public draw(deltaTime: number): void {
+    public draw(deltaTime: number): void
+    {
         this.controller.update(deltaTime); // Update camera
-        this.time +=deltaTime;
+        if(this.move)
+            this.time +=deltaTime;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
+       
+
         this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, this.time/100), vec3.fromValues(3.5, 1, 1000));
-        this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0.09, 0), vec3.fromValues(0.35, 0.35, 0.35))
+        this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
+
         let first_light = true;
 
         for(const light of this.lights){
@@ -331,7 +304,6 @@ export default class TrackScene extends Scene {
                 }
             }
 
-            this.objects['player'].material = this.materials[2]; //TODO Let material == to currM in choosematerial scene
             for(let name in this.objects){
                 let obj = this.objects[name];
 
