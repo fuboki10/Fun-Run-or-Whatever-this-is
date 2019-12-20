@@ -1,4 +1,4 @@
-import { Key } from 'ts-key-enum';
+
 import { Scene } from '../common/game';
 import ShaderProgram from '../common/shader-program';
 import Mesh from '../common/mesh';
@@ -8,12 +8,11 @@ import Camera from '../common/camera';
 import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
 import { vec3, mat4, quat } from 'gl-matrix';
 import { Vector, Selector, Color, NumberInput, CheckBox } from '../common/dom-utils';
-import { createElement } from 'tsx-create-element';
 
-function triangle(x: number): number {
-    let i = Math.floor(x);
-    return (i%2==0)?(x-i):(1+i-x);
-}
+
+// It is better to create interfaces for each type of light for organization (think of them as structs)
+// We simplify things here and consider the light to have only one color
+// Also we separate the ambient light into its own light and make it a hemispherical light (the ambient differs according to the direction)
 interface AmbientLight {
     type: 'ambient',
     enabled: boolean,
@@ -81,8 +80,8 @@ interface Object3D {
 };
 
 
-
-export default class TrackScene extends Scene {
+// In this scene we will draw some textured monkeys with multiple lights using blending and multiple shaders
+export default class Dount extends Scene {
     programs: {[name: string]: ShaderProgram} = {};
     camera: Camera;
     controller: FlyCameraController;
@@ -90,16 +89,17 @@ export default class TrackScene extends Scene {
     textures: {[name: string]: WebGLTexture} = {};
     samplers: {[name: string]: WebGLSampler} = {};
     materials: Material[] = [];
+    currM: number;
     time: number;
-    move:boolean;
-    timeobsacles:number;
+    // We will store the lights here
     lights: Light[] = [
         { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
         { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1) },
     ];
 
+    // And we will store the objects here
     objects: {[name: string]: Object3D} = {};
-    obstacletime:number;
+
     public load(): void {
         // All the lights will use the same vertex shader combined with different fragment shaders
         this.game.loader.load({
@@ -108,53 +108,17 @@ export default class TrackScene extends Scene {
             ["directional.frag"]:{url:'shaders/phong/textured-materials/directional.frag', type:'text'},
             ["point.frag"]:{url:'shaders/phong/textured-materials/point.frag', type:'text'},
             ["spot.frag"]:{url:'shaders/phong/textured-materials/spot.frag', type:'text'},
-            ["suzanne"]:{url:'models/Suzanne/Suzanne.obj', type:'text'},
+            ["Dount"]:{url:'models/obstacles/spike.obj', type:'text'},
             ["bricks.albedo"]:{url:'images/Bricks/albedo.jpg', type:'image'},
             ["bricks.ao"]:{url:'images/Bricks/AO.jpg', type:'image'},
             ["bricks.roughness"]:{url:'images/Bricks/roughness.jpg', type:'image'},
             ["bricks.specular"]:{url:'images/Bricks/specular.jpg', type:'image'},
-            ["tire.albedo"]:{url:'images/Tire/albedo.jpg', type:'image'},
-            ["tire.roughness"]:{url:'images/Tire/roughness.jpg', type:'image'},
-            ["tire.specular"]:{url:'images/Tire/specular.jpg', type:'image'},
-            ["tire.ao"]:{url:'images/Tire/AO.jpg', type:'image'},
-            ["rune.albedo"]:{url:'images/Rune/albedo.jpg', type:'image'},
-            ["rune.roughness"]:{url:'images/Rune/roughness.jpg', type:'image'},
-            ["rune.specular"]:{url:'images/Rune/specular.jpg', type:'image'},
-            ["rune.ao"]:{url:'images/Rune/AO.jpg', type:'image'},
-            ["wood.albedo"]:{url:'images/Wood/albedo.jpg', type:'image'},
-            ["wood.roughness"]:{url:'images/Wood/roughness.jpg', type:'image'},
-            ["wood.specular"]:{url:'images/Wood/specular.jpg', type:'image'},
-            ["wood.ao"]:{url:'images/Wood/ao.jpg', type:'image'},
-            ["snow.albedo"]:{url:'images/Snow/albedo.jpg', type:'image'},
-            ["snow.roughness"]:{url:'images/Snow/roughness.jpg', type:'image'},
-            ["snow.specular"]:{url:'images/Snow/specular.jpg', type:'image'},
-            ["snow.ao"]:{url:'images/Snow/ao.jpg', type:'image'},
         });
     } 
     
     public start(): void {
+        this.currM = 0;
         this.time = 0;
-        this.obstacletime=0;
-        document.addEventListener("keydown", (ev)=>{
-            switch(ev.key){
-                case Key.Enter:
-                    console.log('a7a enter down');
-                    this.move = true;
-                    break;
-                case ' ':
-                    ev.preventDefault();
-            }
-        })
-        document.addEventListener("keyup", (ev)=>{
-            switch(ev.key){
-                case Key.Enter:
-                    console.log('a7a enter up');
-                    this.move = false;
-                    break;
-                case ' ':
-                    ev.preventDefault();
-            }
-        })
         // For each light type, compile and link a shader
         for(let type of ['ambient', 'directional', 'point', 'spot']){
             this.programs[type] = new ShaderProgram(this.gl);
@@ -166,65 +130,29 @@ export default class TrackScene extends Scene {
         // Load the models
         this.meshes['ground'] = MeshUtils.Plane(this.gl, {min:[0,0], max:[50,50]});
         this.meshes['player'] = MeshUtils.Sphere(this.gl);
-        this.meshes['obstacle1']=MeshUtils.WhiteCube(this.gl);
         // Load the textures
-        this.textures['bricks.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.albedo']);
-        this.textures['bricks.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.ao']);
-        this.textures['bricks.roughness'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.roughness']);
-        this.textures['bricks.specular'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.specular']);
-        this.textures['tire.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['tire.albedo']);
-        this.textures['tire.roughness'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['tire.roughness']);
-        this.textures['tire.specular'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['tire.specular']);
-        this.textures['tire.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['tire.ao']);
-        this.textures['rune.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['rune.albedo']);
-        this.textures['rune.roughness'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['rune.roughness']);
-        this.textures['rune.specular'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['rune.specular']);
-        this.textures['rune.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['rune.ao']);
-        this.textures['wood.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['wood.albedo']);
-        this.textures['wood.roughness'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['wood.roughness']);
-        this.textures['wood.specular'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['wood.specular']);
-        this.textures['wood.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['wood.ao']);
-        this.textures['snow.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.albedo']);
-        this.textures['snow.roughness'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.roughness']);
-        this.textures['snow.specular'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.specular']);
-        this.textures['snow.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.ao']);
-        this.textures['ground.albedo'] = TextureUtils.CheckerBoard(this.gl, [1024, 1024], [256, 256], [26, 26, 26, 255], [196, 196, 196, 255]);
-        this.textures['ground.specular'] = TextureUtils.CheckerBoard(this.gl, [1024, 1024], [256, 256], [255, 255, 255, 255], [64, 64, 64, 255]);
-        this.textures['ground.roughness'] = TextureUtils.CheckerBoard(this.gl, [1024, 1024], [256, 256], [52, 52, 52, 255], [245, 245, 245, 255]);
-        this.textures['white'] = TextureUtils.SingleColor(this.gl, [255, 255, 255, 255]);
-        this.textures['black'] = TextureUtils.SingleColor(this.gl, [0, 0, 0, 255]);
+        this.meshes['Dount'] = MeshUtils.LoadOBJMesh(this.gl, this.game.loader.resources["Dount"]);
+        
 
-
-
-                  
-                
-        // Create the 3D ojbects
-       this.objects['ground'] = {
-            mesh: this.meshes['ground'],
-            material: {
-                albedo: this.textures['snow.albedo'],
+        this.materials.push({
+                albedo: this.textures['bricks.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
-                specular: this.textures['snow.specular'],
+                specular: this.textures['bricks.specular'],
                 specular_tint: vec3.fromValues(1, 1, 1),
-                roughness: this.textures['snow.roughness'],
+                roughness: this.textures['bricks.roughness'],
                 roughness_scale: 1,
                 emissive: this.textures['black'],
                 emissive_tint: vec3.fromValues(1, 1, 1),
-                ambient_occlusion: this.textures['white']
-            },
-            modelMatrix: mat4.create()
+                ambient_occlusion: this.textures['bricks.ao']});
+
+     
+
+        this.objects['Dount'] = {
+            mesh: this.meshes['Dount'],
+            material: this.materials[0],
+            modelMatrix: mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
         };
 
-        this.objects['player'] = {
-            mesh: this.meshes['player'],
-            material: this.game.playerMat,
-            modelMatrix: mat4.create()
-        };
-        this.objects['obstacle1'] = {
-            mesh: this.meshes['obstacle1'],
-            material: this.game.playerMat,
-            modelMatrix: mat4.create()
-        };
 
 
 
@@ -238,8 +166,8 @@ export default class TrackScene extends Scene {
         // Create a camera and a controller
         this.camera = new Camera();
         this.camera.type = 'perspective';
-        this.camera.position = vec3.fromValues(0,5,3);
-        this.camera.direction = vec3.fromValues(0,-1,-1);
+        this.camera.position = vec3.fromValues(2,2,2);
+        this.camera.direction = vec3.fromValues(-1,-1,-1);
         this.camera.aspectRatio = this.gl.drawingBufferWidth/this.gl.drawingBufferHeight;
         
         this.controller = new FlyCameraController(this.camera, this.game.input);
@@ -258,18 +186,11 @@ export default class TrackScene extends Scene {
 
     }
     
-    public draw(deltaTime: number): void
-    {
+    public draw(deltaTime: number): void {
         this.controller.update(deltaTime); // Update camera
-        if(this.move)
-            this.time +=deltaTime;
-        this.obstacletime+=deltaTime;
+        this.time +=deltaTime;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
-       
-
-        this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, this.time/100), vec3.fromValues(3.5, 1, 1000));
-        this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-        this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), 0, 0, 0), vec3.fromValues(-5+10*triangle(this.obstacletime/1000), 1, -10+this.time/1000%12), vec3.fromValues(1, 1, 1))
+        this.objects['Dount'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), 360*this.time/20000, 360*this.time/10000, 360*this.time/100000), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
         let first_light = true;
 
         for(const light of this.lights){
@@ -314,44 +235,22 @@ export default class TrackScene extends Scene {
                 }
             }
 
+            this.objects['Dount'].material = this.materials[0];
             for(let name in this.objects){
                 let obj = this.objects[name];
-
+                
                 // Create model matrix for the object
                 program.setUniformMatrix4fv("M", false, obj.modelMatrix);
                 program.setUniformMatrix4fv("M_it", true, mat4.invert(mat4.create(), obj.modelMatrix));
                 
                 // Send material properties and bind the textures
                 program.setUniform3f("material.albedo_tint", obj.material.albedo_tint);
-                program.setUniform3f("material.specular_tint", obj.material.specular_tint);
-                program.setUniform3f("material.emissive_tint", obj.material.emissive_tint);
-                program.setUniform1f("material.roughness_scale", obj.material.roughness_scale);
+                
 
                 this.gl.activeTexture(this.gl.TEXTURE0);
                 this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.albedo);
                 this.gl.bindSampler(0, this.samplers['regular']);
-                program.setUniform1i("material.albedo", 0);
-
-                this.gl.activeTexture(this.gl.TEXTURE1);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.specular);
-                this.gl.bindSampler(1, this.samplers['regular']);
-                program.setUniform1i("material.specular", 1);
-
-                this.gl.activeTexture(this.gl.TEXTURE2);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.roughness);
-                this.gl.bindSampler(2, this.samplers['regular']);
-                program.setUniform1i("material.roughness", 2);
-
-                this.gl.activeTexture(this.gl.TEXTURE3);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.emissive);
-                this.gl.bindSampler(3, this.samplers['regular']);
-                program.setUniform1i("material.emissive", 3);
-
-                this.gl.activeTexture(this.gl.TEXTURE4);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.ambient_occlusion);
-                this.gl.bindSampler(4, this.samplers['regular']);
-                program.setUniform1i("material.ambient_occlusion", 4);
-                
+                program.setUniform1i("material.albedo", 0);        
                 // Draw the object
                 obj.mesh.draw(this.gl.TRIANGLES);
             }   
@@ -359,6 +258,9 @@ export default class TrackScene extends Scene {
     }
     
     public end(): void {
+        const canvas: HTMLCanvasElement = document.querySelector("#text");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         for(let key in this.programs)
             this.programs[key].dispose();
         this.programs = {};
@@ -367,5 +269,10 @@ export default class TrackScene extends Scene {
         this.meshes = {};
     }
 
-}
 
+    /////////////////////////////////////////////////////////
+    ////// ADD CONTROL TO THE WEBPAGE (NOT IMPORTNANT) //////
+    /////////////////////////////////////////////////////////
+   
+
+}
