@@ -408,6 +408,9 @@ export default class ChooseMaterialScene extends Scene {
     }
     
     public end(): void {
+        const canvas: HTMLCanvasElement = document.querySelector("#text");
+        const ctx = canvas.getContext("2d");
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         for(let key in this.programs)
             this.programs[key].dispose();
         this.programs = {};
