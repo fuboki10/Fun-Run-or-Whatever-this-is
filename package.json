@@ -14,6 +14,7 @@
   "author": "Yahia Zakaria",
   "license": "MIT",
   "devDependencies": {
+    "@types/cannon": "^0.1.4",
     "@types/gl-matrix": "^2.4.5",
     "@types/webgl2": "0.0.5",
     "parcel-bundler": "^1.12.3",
@@ -22,6 +23,7 @@
     "typescript": "^3.7.2"
   },
   "dependencies": {
+    "cannon": "github:schteppe/cannon.js",
     "gl-matrix": "^3.1.0",
     "ts-key-enum": "^2.0.0",
     "tsx-create-element": "^2.0.0",

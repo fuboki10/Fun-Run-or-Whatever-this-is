@@ -258,7 +258,7 @@ export function LoadOBJMesh(gl: WebGL2RenderingContext, data: string){
 }
 
 export function ColoredPlane(gl: WebGL2RenderingContext): Mesh {
-    let mesh = createMesh(gl);
+    let mesh = createEmptyMesh(gl);
     mesh.setBufferData("positions", new Float32Array([
         -0.5, -0.5, 0.0,
         0.5, -0.5, 0.0,

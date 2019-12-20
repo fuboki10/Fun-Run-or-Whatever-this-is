@@ -9,6 +9,7 @@ import FlyCameraController from '../common/camera-controllers/fly-camera-control
 import { vec3, mat4, quat } from 'gl-matrix';
 import { Vector, Selector, Color, NumberInput, CheckBox } from '../common/dom-utils';
 import { createElement } from 'tsx-create-element';
+import {AABB, Collides} from '../common/CollisionDetector'
 
 function triangle(x: number): number {
     let i = Math.floor(x);
@@ -355,6 +356,10 @@ export default class TrackScene extends Scene {
                 // Draw the object
                 obj.mesh.draw(this.gl.TRIANGLES);
             }   
+        }
+        if (Collides(this.objects['player'].modelMatrix, this.objects['obstacle1'].modelMatrix))
+        {
+            console.log("aaaaaaaaaaaaaaaaaaaaaaaaaa");
         }
     }
     
