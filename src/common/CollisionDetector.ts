@@ -36,4 +36,14 @@ export function Collides(mat_a : mat4, mat_b : mat4) : boolean
     return meetingAxies == 3;
 }
 
-
+export function matbyvec(mata:mat4,vecb:vec4){
+    let vec4out=vec4.fromValues(0,0,0,0);
+    let flat=mata.entries();
+    console.log(mata[4]);
+    for (let i = 0; i < 4; i++) {
+        for (let j = 0; j < 4; j++) {
+            vec4out[i]+=mata[4*i+j]*vecb[j];
+        }
+    }
+    return vec4out;   
+}

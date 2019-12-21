@@ -6,9 +6,10 @@ import * as MeshUtils from '../common/mesh-utils';
 import * as TextureUtils from '../common/texture-utils';
 import Camera from '../common/camera';
 import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
-import { vec3, mat4, quat } from 'gl-matrix';
+import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import { Vector, Selector, Color, NumberInput, CheckBox } from '../common/dom-utils';
 import { createElement } from 'tsx-create-element';
+import { matbyvec } from '../common/CollisionDetector';
 
 // It is better to create interfaces for each type of light for organization (think of them as structs)
 // We simplify things here and consider the light to have only one color
@@ -91,6 +92,7 @@ export default class ChooseMaterialScene extends Scene {
     materials: Material[] = [];
     currM: number;
     time: number;
+    
     // We will store the lights here
     lights: Light[] = [
         { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
@@ -293,7 +295,7 @@ export default class ChooseMaterialScene extends Scene {
 
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
-
+        console.log(matbyvec(mat4.fromValues(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5),vec4.fromValues(1,1,1,1)));
         // Use a dark grey clear color
         this.gl.clearColor(0.1,0.1,0.1,1);
 
@@ -406,9 +408,20 @@ export default class ChooseMaterialScene extends Scene {
     }
 
 
-    /////////////////////////////////////////////////////////
-    ////// ADD CONTROL TO THE WEBPAGE (NOT IMPORTNANT) //////
-    /////////////////////////////////////////////////////////
-   
+     public obstacles(){  
+            var randoms=[...Array(5)].map(()=>Math.floor(Math.random()*3))
+            for (let i = 0; i < 5; i++) {
+                if(randoms[i]==0){
+                    
+                }
+                else if(randoms[i]==1){
+    
+                }
+                else {
+    
+                }
+            }
+        }
+    
 
 }
