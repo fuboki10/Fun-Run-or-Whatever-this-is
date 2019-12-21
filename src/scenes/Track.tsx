@@ -231,7 +231,8 @@ export default class TrackScene extends Scene {
             modelMatrix: mat4.create()
         };
 
-
+        let aabb = new AABB(this.objects['player'].mesh);
+        console.log(aabb);
 
         // Create a regular sampler for textures rendered on the scene objects
         this.samplers['regular'] = this.gl.createSampler();
