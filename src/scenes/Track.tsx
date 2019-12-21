@@ -142,7 +142,7 @@ export default class TrackScene extends Scene {
         document.addEventListener("keydown", (ev)=>{
             switch(ev.key){
                 case Key.Enter:
-                    console.log('a7a enter down');
+            
                     this.move = true;
                     break;
                 case ' ':
@@ -152,7 +152,10 @@ export default class TrackScene extends Scene {
         document.addEventListener("keyup", (ev)=>{
             switch(ev.key){
                 case Key.Enter:
-                    console.log('a7a enter up');
+                   
+                    
+                  
+        
                     this.move = false;
                     break;
                 case ' ':
@@ -296,16 +299,13 @@ export default class TrackScene extends Scene {
             this.time +=deltaTime;
         this.obstacletime+=deltaTime;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
-       
-
         this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, this.time/100), vec3.fromValues(3.5, 1, 1000));
         this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-        this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
-        vec3.fromValues(0,3, -10+this.time/100%13), vec3.fromValues(1, 1, 1));
+        this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -360*this.obstacletime/10000, 0),
+        vec3.fromValues(0,1, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
         var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
-        var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
         this.objects['obb'].modelMatrix = mt1;
-        this.objects['pbb'].modelMatrix = mt2;
+       
 
         // // for (let i = 0; i < 5; i++) {
         // //     if(this.randoms[i]==0){
@@ -412,7 +412,7 @@ export default class TrackScene extends Scene {
                     obj.mesh.draw(this.gl.TRIANGLES);
             }   
         }
-       if (Collides(this.objects['player'].aabb, this.objects['obstacle1'].aabb, mt2, mt1))
+       if (Collides(this.objects['player'].aabb, this.objects['obstacle1'].aabb, this.objects['player'].modelMatrix,this.objects['obstacle1'].modelMatrix ))
        {
            console.log("aaaaaaaaaaaa");
        }
