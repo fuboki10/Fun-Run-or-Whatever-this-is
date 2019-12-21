@@ -37,7 +37,7 @@ export function matbyvec(mata:mat4,vecb:vec4){
     return vec4out;   
 }
 
-
+/*
 export function Collides(a : AABB, b : AABB) : boolean
 {
     let meetingAxies = 0; // how many axies are colliding between the AABBs (must be at least 3 to be true)
@@ -49,3 +49,4 @@ export function Collides(a : AABB, b : AABB) : boolean
     return meetingAxies == 3;
 }
 
+*/

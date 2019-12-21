@@ -9,7 +9,7 @@ import FlyCameraController from '../common/camera-controllers/fly-camera-control
 import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import { Vector, Selector, Color, NumberInput, CheckBox } from '../common/dom-utils';
 import { createElement } from 'tsx-create-element';
-import {AABB, Collides,matbyvec} from '../common/CollisionDetector'
+import {AABB,matbyvec} from '../common/CollisionDetector'
 
 function triangle(x: number): number {
     let i = Math.floor(x);
@@ -170,6 +170,7 @@ export default class TrackScene extends Scene {
         this.meshes['ground'] = MeshUtils.Plane(this.gl, {min:[0,0], max:[50,50]});
         this.meshes['player'] = MeshUtils.Sphere(this.gl);
         this.meshes['obstacle1']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["Spike"]);
+        this.meshes['obb'] = MeshUtils.Cube(this.gl);
         //this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
         //this.meshes['obstacle1'] = MeshUtils.LoadOBJMesh(this.gl, this.game.loader.resources["house-model"]);
         // Load the textures
@@ -231,8 +232,11 @@ export default class TrackScene extends Scene {
             modelMatrix: mat4.create()
         };
 
-        let aabb = new AABB(this.objects['player'].mesh);
-        console.log(aabb);
+        this.objects['obb'] = {
+            mesh: this.meshes['obb'],
+            material: this.game.playerMat,
+            modelMatrix: mat4.create()
+        };
 
         // Create a regular sampler for textures rendered on the scene objects
         this.samplers['regular'] = this.gl.createSampler();
@@ -277,7 +281,9 @@ export default class TrackScene extends Scene {
         this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, this.time/100), vec3.fromValues(3.5, 1, 1000));
         this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
         this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
-         vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
+        vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
+        this.objects['obb'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
+        vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
         // // for (let i = 0; i < 5; i++) {
         // //     if(this.randoms[i]==0){
         // //         this.objects[i].modelMatrix=mat4.fromRotationTranslationScale(mat4.create()
@@ -375,12 +381,13 @@ export default class TrackScene extends Scene {
                 program.setUniform1i("material.ambient_occlusion", 4);
                 
                 // Draw the object
-                obj.mesh.draw(this.gl.TRIANGLES);
+                if (name == 'obb')
+                {
+                    obj.mesh.draw(this.gl.LINE_LOOP);
+                }
+                else
+                    obj.mesh.draw(this.gl.TRIANGLES);
             }   
-        }
-        if (Collides(this.objects['player'].modelMatrix, this.objects['obstacle1'].modelMatrix))
-        {
-            console.log("aaaaaaaaaaaaaaaaaaaaaaaaaa");
         }
     }
     
