@@ -56,7 +56,8 @@ export default class Mesh {
         if(bufferName in this.VBOs){
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.VBOs[bufferName]);
             this.gl.bufferData(this.gl.ARRAY_BUFFER, bufferData, usage);
-            this.vertices = bufferData;
+            if (bufferName == "positions")
+                this.vertices = bufferData;
         } else {
             console.error(`"${bufferName}" is not found in the buffers list`);
         }
