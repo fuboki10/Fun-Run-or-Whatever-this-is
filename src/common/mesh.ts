@@ -19,6 +19,7 @@ export default class Mesh {
     VAO: WebGLVertexArrayObject;
     elementCount: number;
     elementType: number;
+    vertices : Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array ;
 
     // The constructor takes a WebGL context and a list of vertex attribute descriptors
     // It will get all the buffer names and create them then it will build the Vertex Array to read the attributes from them
@@ -30,6 +31,7 @@ export default class Mesh {
         for(const bufferName of bufferNames) this.VBOs[bufferName] = this.gl.createBuffer();
         this.EBO = this.gl.createBuffer();
         this.VAO = this.gl.createVertexArray();
+        this.vertices = new Float32Array();
 
         this.gl.bindVertexArray(this.VAO);
         for(let descriptor of this.descriptors){
@@ -50,10 +52,11 @@ export default class Mesh {
     }
 
     // We will use this to fill the vertex buffer data
-    public setBufferData(bufferName: string, bufferData: number | Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array | DataView | ArrayBuffer, usage: number){
+    public setBufferData(bufferName: string, bufferData: Int8Array | Int16Array | Int32Array | Uint8Array | Uint16Array | Uint32Array | Uint8ClampedArray | Float32Array | Float64Array , usage: number){
         if(bufferName in this.VBOs){
             this.gl.bindBuffer(this.gl.ARRAY_BUFFER, this.VBOs[bufferName]);
             this.gl.bufferData(this.gl.ARRAY_BUFFER, bufferData, usage);
+            this.vertices = bufferData;
         } else {
             console.error(`"${bufferName}" is not found in the buffers list`);
         }
