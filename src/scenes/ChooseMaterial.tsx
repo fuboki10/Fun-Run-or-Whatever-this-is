@@ -295,7 +295,7 @@ export default class ChooseMaterialScene extends Scene {
 
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
-        console.log(matbyvec(mat4.fromValues(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5),vec4.fromValues(1,1,1,1)));
+        //console.log(matbyvec(mat4.fromValues(0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,0.5,-0.5),vec4.fromValues(1,1,1,1)));
         // Use a dark grey clear color
         this.gl.clearColor(0.1,0.1,0.1,1);
 

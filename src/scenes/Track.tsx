@@ -78,7 +78,8 @@ interface Material {
 interface Object3D {
     mesh: Mesh,
     material: Material,
-    modelMatrix: mat4
+    modelMatrix: mat4,
+    aabb : AABB
 };
 
 
@@ -130,7 +131,7 @@ export default class TrackScene extends Scene {
             ["snow.roughness"]:{url:'images/Snow/roughness.jpg', type:'image'},
             ["snow.specular"]:{url:'images/Snow/specular.jpg', type:'image'},
             ["snow.ao"]:{url:'images/Snow/ao.jpg', type:'image'},
-            ["Spike"]:{url:'models/obstacles/1.obj',type:'text'},
+            ["Spike"]:{url:'models/obstacles/cube.obj',type:'text'},
             ["house-model"]: { url: 'models/House/House.obj', type: 'text' }
         });
     } 
@@ -169,8 +170,8 @@ export default class TrackScene extends Scene {
         // Load the models
         this.meshes['ground'] = MeshUtils.Plane(this.gl, {min:[0,0], max:[50,50]});
         this.meshes['player'] = MeshUtils.Sphere(this.gl);
-        this.meshes['obstacle1']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["Spike"]);
-        this.meshes['obb'] = MeshUtils.Cube(this.gl);
+        this.meshes['obstacle1']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["suzanne"]);
+        this.meshes['pbb'] = MeshUtils.Cube(this.gl);
         //this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
         //this.meshes['obstacle1'] = MeshUtils.LoadOBJMesh(this.gl, this.game.loader.resources["house-model"]);
         // Load the textures
@@ -218,24 +219,36 @@ export default class TrackScene extends Scene {
                 emissive_tint: vec3.fromValues(1, 1, 1),
                 ambient_occlusion: this.textures['white']
             },
-            modelMatrix: mat4.create()
+            modelMatrix: mat4.create(),
+            aabb : null
         };
 
         this.objects['player'] = {
             mesh: this.meshes['player'],
             material: this.game.playerMat,
-            modelMatrix: mat4.create()
+            modelMatrix: mat4.create(),
+            aabb : new AABB(this.meshes['player'])
         };
         this.objects['obstacle1'] = {
             mesh: this.meshes['obstacle1'],
-            material: this.game.playerMat,
-            modelMatrix: mat4.create()
+            material: {albedo: this.textures['snow.albedo'],
+            albedo_tint: vec3.fromValues(1, 1, 1),
+            specular: this.textures['snow.specular'],
+            specular_tint: vec3.fromValues(1, 1, 1),
+            roughness: this.textures['snow.roughness'],
+            roughness_scale: 1,
+            emissive: this.textures['black'],
+            emissive_tint: vec3.fromValues(1, 1, 1),
+            ambient_occlusion: this.textures['white']},
+            modelMatrix: mat4.create(),
+            aabb : new AABB(this.meshes['obstacle1'])
         };
-
-        this.objects['obb'] = {
-            mesh: this.meshes['obb'],
+        console.log(this.objects['obstacle1'].aabb);
+        this.objects['pbb'] = {
+            mesh: this.meshes['pbb'],
             material: this.game.playerMat,
-            modelMatrix: mat4.create()
+            modelMatrix: mat4.create(),
+            aabb : null
         };
 
         // Create a regular sampler for textures rendered on the scene objects
@@ -281,9 +294,10 @@ export default class TrackScene extends Scene {
         this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, this.time/100), vec3.fromValues(3.5, 1, 1000));
         this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
         this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
-        vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
-        this.objects['obb'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
-        vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
+        vec3.fromValues(0,3, -10+this.time/100%13), vec3.fromValues(1, 1, 1));
+        var mt = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
+        this.objects['pbb'].modelMatrix = mt;
+
         // // for (let i = 0; i < 5; i++) {
         // //     if(this.randoms[i]==0){
         // //         this.objects[i].modelMatrix=mat4.fromRotationTranslationScale(mat4.create()
@@ -381,7 +395,7 @@ export default class TrackScene extends Scene {
                 program.setUniform1i("material.ambient_occlusion", 4);
                 
                 // Draw the object
-                if (name == 'obb')
+                if (name == 'pbb')
                 {
                     obj.mesh.draw(this.gl.LINE_LOOP);
                 }
