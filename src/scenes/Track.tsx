@@ -6,10 +6,10 @@ import * as MeshUtils from '../common/mesh-utils';
 import * as TextureUtils from '../common/texture-utils';
 import Camera from '../common/camera';
 import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
-import { vec3, mat4, quat } from 'gl-matrix';
+import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import { Vector, Selector, Color, NumberInput, CheckBox } from '../common/dom-utils';
 import { createElement } from 'tsx-create-element';
-import {AABB, Collides} from '../common/CollisionDetector'
+import {AABB, Collides,matbyvec} from '../common/CollisionDetector'
 
 function triangle(x: number): number {
     let i = Math.floor(x);
@@ -98,7 +98,7 @@ export default class TrackScene extends Scene {
         { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
         { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1) },
     ];
-
+    randoms:number[];
     objects: {[name: string]: Object3D} = {};
     obstacletime:number;
     public load(): void {
@@ -130,6 +130,8 @@ export default class TrackScene extends Scene {
             ["snow.roughness"]:{url:'images/Snow/roughness.jpg', type:'image'},
             ["snow.specular"]:{url:'images/Snow/specular.jpg', type:'image'},
             ["snow.ao"]:{url:'images/Snow/ao.jpg', type:'image'},
+            ["Spike"]:{url:'models/obstacles/1.obj',type:'text'},
+            ["house-model"]: { url: 'models/House/House.obj', type: 'text' }
         });
     } 
     
@@ -167,7 +169,9 @@ export default class TrackScene extends Scene {
         // Load the models
         this.meshes['ground'] = MeshUtils.Plane(this.gl, {min:[0,0], max:[50,50]});
         this.meshes['player'] = MeshUtils.Sphere(this.gl);
-        this.meshes['obstacle1']=MeshUtils.WhiteCube(this.gl);
+        this.meshes['obstacle1']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["Spike"]);
+        //this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
+        //this.meshes['obstacle1'] = MeshUtils.LoadOBJMesh(this.gl, this.game.loader.resources["house-model"]);
         // Load the textures
         this.textures['bricks.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.albedo']);
         this.textures['bricks.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.ao']);
@@ -256,6 +260,7 @@ export default class TrackScene extends Scene {
 
         // Use a dark grey clear color
         this.gl.clearColor(0.1,0.1,0.1,1);
+        var a= vec4.fromValues(0,0,0,0);
 
     }
     
@@ -270,9 +275,24 @@ export default class TrackScene extends Scene {
 
         this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, this.time/100), vec3.fromValues(3.5, 1, 1000));
         this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-        this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), 0, 0, 0), vec3.fromValues(-5+10*triangle(this.obstacletime/1000), 1, -10+this.time/1000%12), vec3.fromValues(1, 1, 1))
-        let first_light = true;
-
+        this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
+         vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
+        // // for (let i = 0; i < 5; i++) {
+        // //     if(this.randoms[i]==0){
+        // //         this.objects[i].modelMatrix=mat4.fromRotationTranslationScale(mat4.create()
+        // //         ,quat.fromEuler(quat.create(), 0, 0, 0),vec3.fromValues(-5+10*triangle(this.obstacletime/1000),
+        // //          1, -10+this.time/100%13), vec3.fromValues(1.5, 0.5, 1.5))
+        // //     }else if(this.randoms[i]==1){
+        // // //          this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), 0, 0, 0),
+        // //              vec3.fromValues(0, 10*triangle(this.obstacletime/1000), -10+this.time/100%13), vec3.fromValues(3.5, 1.5, 0.5))
+        // //     }
+        // //     else{
+        //     this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
+        //  vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
+        // //     }
+        // //  }
+         let first_light = true;
+        
         for(const light of this.lights){
             if(!light.enabled) continue; // If the light is not enabled, continue
 
@@ -284,7 +304,7 @@ export default class TrackScene extends Scene {
                 this.gl.blendEquation(this.gl.FUNC_ADD);
                 this.gl.blendFunc(this.gl.ONE, this.gl.ONE); // This config will make the output = src_color + dest_color
             }
-
+            
             let program = this.programs[light.type]; // Get the shader to use with this light type
             program.use(); // Use it
 
@@ -372,5 +392,31 @@ export default class TrackScene extends Scene {
         this.meshes = {};
     }
 
+    public obstacles(){  
+        this.randoms=[...Array(5)].map(()=>Math.floor(Math.random()*3))
+        for (let i = 0; i < 5; i++) {
+            if(randoms[i]==0){
+                this.objects[i]={
+                    mesh: MeshUtils.WhiteCube(this.gl),
+                    material: this.game.playerMat,
+                    modelMatrix: mat4.create()
+                };
+            }
+            else if(randoms[i]==1){
+                this.objects[i]={
+                    mesh: MeshUtils.WhiteCube(this.gl),
+                    material: this.game.playerMat,
+                    modelMatrix: mat4.create()
+                };
+            }
+            else {
+                this.objects[i]={
+                    mesh: MeshUtils.LoadOBJMesh(this.gl,this.game.loader["spike"]),
+                    material: this.game.playerMat,
+                    modelMatrix: mat4.create()
+                };
+            }
+        }
+    }
 }
 
