@@ -9,7 +9,7 @@ import FlyCameraController from '../common/camera-controllers/fly-camera-control
 import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import { Vector, Selector, Color, NumberInput, CheckBox } from '../common/dom-utils';
 import { createElement } from 'tsx-create-element';
-import {AABB,matbyvec} from '../common/CollisionDetector'
+import {AABB,matbyvec, Collides} from '../common/CollisionDetector'
 
 function triangle(x: number): number {
     let i = Math.floor(x);
@@ -172,6 +172,7 @@ export default class TrackScene extends Scene {
         this.meshes['player'] = MeshUtils.Sphere(this.gl);
         this.meshes['obstacle1']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["suzanne"]);
         this.meshes['pbb'] = MeshUtils.Cube(this.gl);
+        this.meshes['obb'] = MeshUtils.Cube(this.gl);
         //this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
         //this.meshes['obstacle1'] = MeshUtils.LoadOBJMesh(this.gl, this.game.loader.resources["house-model"]);
         // Load the textures
@@ -229,6 +230,12 @@ export default class TrackScene extends Scene {
             modelMatrix: mat4.create(),
             aabb : new AABB(this.meshes['player'])
         };
+        this.objects['pbb'] = {
+            mesh: this.meshes['pbb'],
+            material: this.game.playerMat,
+            modelMatrix: mat4.create(),
+            aabb : null
+        };
         this.objects['obstacle1'] = {
             mesh: this.meshes['obstacle1'],
             material: {albedo: this.textures['snow.albedo'],
@@ -243,9 +250,9 @@ export default class TrackScene extends Scene {
             modelMatrix: mat4.create(),
             aabb : new AABB(this.meshes['obstacle1'])
         };
-        console.log(this.objects['obstacle1'].aabb);
-        this.objects['pbb'] = {
-            mesh: this.meshes['pbb'],
+        //console.log(this.objects['obstacle1'].aabb);
+        this.objects['obb'] = {
+            mesh: this.meshes['obb'],
             material: this.game.playerMat,
             modelMatrix: mat4.create(),
             aabb : null
@@ -295,8 +302,10 @@ export default class TrackScene extends Scene {
         this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
         this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
         vec3.fromValues(0,3, -10+this.time/100%13), vec3.fromValues(1, 1, 1));
-        var mt = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
-        this.objects['pbb'].modelMatrix = mt;
+        var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
+        var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+        this.objects['obb'].modelMatrix = mt1;
+        this.objects['pbb'].modelMatrix = mt2;
 
         // // for (let i = 0; i < 5; i++) {
         // //     if(this.randoms[i]==0){
@@ -395,7 +404,7 @@ export default class TrackScene extends Scene {
                 program.setUniform1i("material.ambient_occlusion", 4);
                 
                 // Draw the object
-                if (name == 'pbb')
+                if (name == 'pbb' || name == 'obb')
                 {
                     obj.mesh.draw(this.gl.LINE_LOOP);
                 }
@@ -403,6 +412,10 @@ export default class TrackScene extends Scene {
                     obj.mesh.draw(this.gl.TRIANGLES);
             }   
         }
+       if (Collides(this.objects['player'].aabb, this.objects['obstacle1'].aabb, mt2, mt1))
+       {
+           console.log("aaaaaaaaaaaa");
+       }
     }
     
     public end(): void {
