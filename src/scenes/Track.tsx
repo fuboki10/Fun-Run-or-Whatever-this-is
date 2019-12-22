@@ -94,11 +94,11 @@ export default class TrackScene extends Scene {
     materials: Material[] = [];
     time: number;
     move:boolean;
-    timeobsacles:number;
     lights: Light[] = [
         { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
         { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1) },
     ];
+    obstaclesplaces:number[];
     randoms:number[];
     objects: {[name: string]: Object3D} = {};
     obstacletime:number;
@@ -173,7 +173,7 @@ export default class TrackScene extends Scene {
         // Load the models
         this.meshes['ground'] = MeshUtils.Plane(this.gl, {min:[0,0], max:[50,50]});
         this.meshes['player'] = MeshUtils.Sphere(this.gl);
-        this.meshes['obstacle1']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["suzanne"]);
+        this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
         this.meshes['pbb'] = MeshUtils.Cube(this.gl);
         this.meshes['obb'] = MeshUtils.Cube(this.gl);
         //this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
@@ -239,20 +239,40 @@ export default class TrackScene extends Scene {
             modelMatrix: mat4.create(),
             aabb : null
         };
-        this.objects['obstacle1'] = {
-            mesh: this.meshes['obstacle1'],
-            material: {albedo: this.textures['snow.albedo'],
-            albedo_tint: vec3.fromValues(1, 1, 1),
-            specular: this.textures['snow.specular'],
-            specular_tint: vec3.fromValues(1, 1, 1),
-            roughness: this.textures['snow.roughness'],
-            roughness_scale: 1,
-            emissive: this.textures['black'],
-            emissive_tint: vec3.fromValues(1, 1, 1),
-            ambient_occlusion: this.textures['white']},
-            modelMatrix: mat4.create(),
-            aabb : new AABB(this.meshes['obstacle1'])
-        };
+        // this.objects['obstacle1'] = {
+        //     mesh: this.meshes['obstacle1'],
+        //     material: {albedo: this.textures['snow.albedo'],
+        //     albedo_tint: vec3.fromValues(1, 1, 1),
+        //     specular: this.textures['snow.specular'],
+        //     specular_tint: vec3.fromValues(1, 1, 1),
+        //     roughness: this.textures['snow.roughness'],
+        //     roughness_scale: 1,
+        //     emissive: this.textures['black'],
+        //     emissive_tint: vec3.fromValues(1, 1, 1),
+        //     ambient_occlusion: this.textures['white']},
+        //     modelMatrix: mat4.create(),
+        //     aabb : new AABB(this.meshes['obstacle1'])
+        // };
+        //this.initobstacles();
+        this.randoms=[...Array(5)].map(()=>Math.floor(Math.random()*3));
+        this.obstaclesplaces=[-10,-20,-30,-40,-50];
+        for (let i = 0; i < 5; i++) {
+            
+            this.objects[i]={
+                mesh:MeshUtils.Cube(this.gl),
+                material: {albedo: this.textures['snow.albedo'],
+                albedo_tint: vec3.fromValues(1, 1, 1),
+                specular: this.textures['snow.specular'],
+                specular_tint: vec3.fromValues(1, 1, 1),
+                roughness: this.textures['snow.roughness'],
+                roughness_scale: 1,
+                emissive: this.textures['black'],
+                emissive_tint: vec3.fromValues(1, 1, 1),
+                ambient_occlusion: this.textures['white']},
+                modelMatrix: mat4.create(),
+                aabb : new AABB(MeshUtils.Cube(this.gl))
+            };
+        }
         //console.log(this.objects['obstacle1'].aabb);
         this.objects['obb'] = {
             mesh: this.meshes['obb'],
@@ -300,27 +320,13 @@ export default class TrackScene extends Scene {
         this.obstacletime+=deltaTime;
         this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
         this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, 0, this.time/100), vec3.fromValues(3.5, 1, 1000));
-        this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-        this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -360*this.obstacletime/10000, 0),
-        vec3.fromValues(0,1, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
-        var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
-        this.objects['obb'].modelMatrix = mt1;
-       
+        this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1));
+        // this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 360*this.obstacletime/10000, 0),
+        // vec3.fromValues(-7,1, -13+this.time/100%23), vec3.fromValues(10, 0.5, 0.5));
+        //  var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
+        // this.objects['obb'].modelMatrix = mt1;
+        this.placeobstacles();
 
-        // // for (let i = 0; i < 5; i++) {
-        // //     if(this.randoms[i]==0){
-        // //         this.objects[i].modelMatrix=mat4.fromRotationTranslationScale(mat4.create()
-        // //         ,quat.fromEuler(quat.create(), 0, 0, 0),vec3.fromValues(-5+10*triangle(this.obstacletime/1000),
-        // //          1, -10+this.time/100%13), vec3.fromValues(1.5, 0.5, 1.5))
-        // //     }else if(this.randoms[i]==1){
-        // // //          this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), 0, 0, 0),
-        // //              vec3.fromValues(0, 10*triangle(this.obstacletime/1000), -10+this.time/100%13), vec3.fromValues(3.5, 1.5, 0.5))
-        // //     }
-        // //     else{
-        //     this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(),  0,-360*this.obstacletime/10000, 0),
-        //  vec3.fromValues(0,0, -10+this.time/100%13), vec3.fromValues(3, 3, 3));
-        // //     }
-        // //  }
          let first_light = true;
         
         for(const light of this.lights){
@@ -412,10 +418,10 @@ export default class TrackScene extends Scene {
                     obj.mesh.draw(this.gl.TRIANGLES);
             }   
         }
-       if (Collides(this.objects['player'].aabb, this.objects['obstacle1'].aabb, this.objects['player'].modelMatrix,this.objects['obstacle1'].modelMatrix ))
-       {
-           console.log("aaaaaaaaaaaa");
-       }
+    //    if (Collides(this.objects['player'].aabb, this.objects['obstacle1'].aabb, this.objects['player'].modelMatrix,this.objects['obstacle1'].modelMatrix ))
+    //    {
+    //        console.log("aaaaaaaaaaaa");
+    //    }
     }
     
     public end(): void {
@@ -427,31 +433,28 @@ export default class TrackScene extends Scene {
         this.meshes = {};
     }
 
-    public obstacles(){  
-        this.randoms=[...Array(5)].map(()=>Math.floor(Math.random()*3))
+    public initobstacles(){   
+       
+    }
+    public placeobstacles(){
         for (let i = 0; i < 5; i++) {
-            if(randoms[i]==0){
-                this.objects[i]={
-                    mesh: MeshUtils.WhiteCube(this.gl),
-                    material: this.game.playerMat,
-                    modelMatrix: mat4.create()
-                };
+            var place=this.obstaclesplaces[i]+(this.time/100)%55;
+            if(place>3){
+                this.obstaclesplaces[i]=-50;
+                this.randoms[i]=Math.floor(Math.random()*3);
             }
-            else if(randoms[i]==1){
-                this.objects[i]={
-                    mesh: MeshUtils.WhiteCube(this.gl),
-                    material: this.game.playerMat,
-                    modelMatrix: mat4.create()
-                };
-            }
-            else {
-                this.objects[i]={
-                    mesh: MeshUtils.LoadOBJMesh(this.gl,this.game.loader["spike"]),
-                    material: this.game.playerMat,
-                    modelMatrix: mat4.create()
-                };
-            }
+        if(this.randoms[i]==0){
+            this.objects[i].modelMatrix=mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
+            vec3.fromValues(-5+10*triangle(this.obstacletime/1000),1,place), vec3.fromValues(1.5, 0.5, 1.5));
+        }else if(this.randoms[i]==1){
+             this.objects[i].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), 0, 0, 0),
+             vec3.fromValues(0, 10*triangle(this.obstacletime/1000),place), vec3.fromValues(3.5, 1.5, 0.5));
         }
+        else{
+        this.objects[i].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 360*this.obstacletime/10000, 0),
+        vec3.fromValues(-7,1, place), vec3.fromValues(10, 0.5, 0.5));
+        }
+      }
     }
 }
 
