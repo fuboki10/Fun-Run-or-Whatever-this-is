@@ -6,7 +6,7 @@ in vec3 v_world;
 in vec3 v_normal;
 in vec3 v_view;
 
-layout(location=1) out vec4 acolor; // This will be sent to the first attachment
+out vec4 color;
 
 struct Material {
     sampler2D albedo; // Albedo will be used for diffuse and ambient
@@ -66,7 +66,7 @@ void main(){
     vec3 n = normalize(v_normal);
     vec3 v = normalize(v_view);
     vec3 ambient = mix(light.groundColor, light.skyColor , 0.5f * dot(n, light.skyDirection) + 0.5f); // Mix the sky and ground color based on the normal direction
-    acolor = vec4(
+    color = vec4(
         sampled.emissive + // Ideally, we should separate emissive light but this mean that we will have to add one more pass... no thanks
         sampled.albedo * sampled.ambient_occlusion * ambient, // Note that, we multiply the ambient occlusion with the albedo to get the material ambient color
         1.0f

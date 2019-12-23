@@ -7,7 +7,8 @@ in vec2 v_texcoord;
 in vec3 v_world;
 in vec3 v_normal;
 in vec3 v_view;
-layout(location=0) out vec4 dcolor; // This will be sent to the first attachment
+
+out vec4 color;
 
 struct Material {
     sampler2D albedo;
@@ -22,11 +23,14 @@ struct Material {
 };
 uniform Material material;
 
-struct DirectionalLight {
+struct PointLight {
     vec3 color;
-    vec3 direction;
+    vec3 position;
+    float attenuation_quadratic;
+    float attenuation_linear;
+    float attenuation_constant;
 };
-uniform DirectionalLight light;
+uniform PointLight light;
 
 float diffuse(vec3 n, vec3 l){
     //Diffuse (Lambert) term computation: reflected light = cosine the light incidence angle on the surface
@@ -63,11 +67,20 @@ void main(){
 
     vec3 n = normalize(v_normal);
     vec3 v = normalize(v_view);
+    vec3 l = light.position - v_world;
+    float d = length(l);
+    l /= d;
+    float attenuation = light.attenuation_constant +
+                        light.attenuation_linear * d +
+                        light.attenuation_quadratic * d * d;
     // No more ambient here, it is moved to ambient.frag
     // Also, the light color is no longer seperated by diffuse and specular
-    dcolor = vec4(
-        (sampled.albedo*diffuse(n, -light.direction) + 
-        sampled.specular*specular(n, -light.direction, v, sampled.shininess)) * light.color,
+    color = vec4(
+        (
+            sampled.albedo*diffuse(n, l) + 
+            sampled.specular*specular(n, l, v, sampled.shininess)
+        )*light.color/attenuation,
         1.0f
     );
+    //Notice that Attenuation only affects diffuse and specular term
 }

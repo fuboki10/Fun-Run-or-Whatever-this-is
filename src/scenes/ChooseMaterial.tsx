@@ -105,11 +105,11 @@ export default class ChooseMaterialScene extends Scene {
     public load(): void {
         // All the lights will use the same vertex shader combined with different fragment shaders
         this.game.loader.load({
-            ["light.vert"]:{url:'shaders/phong/textured-materials/light.vert', type:'text'},
-            ["ambient.frag"]:{url:'shaders/phong/textured-materials/ambient.frag', type:'text'},
-            ["directional.frag"]:{url:'shaders/phong/textured-materials/directional.frag', type:'text'},
-            ["point.frag"]:{url:'shaders/phong/textured-materials/point.frag', type:'text'},
-            ["spot.frag"]:{url:'shaders/phong/textured-materials/spot.frag', type:'text'},
+            ["light.vert"]:{url:'shaders/phong/menu/light.vert', type:'text'},
+            ["ambient.frag"]:{url:'shaders/phong/menu/ambient.frag', type:'text'},
+            ["directional.frag"]:{url:'shaders/phong/menu/directional.frag', type:'text'},
+            ["point.frag"]:{url:'shaders/phong/menu/point.frag', type:'text'},
+            ["spot.frag"]:{url:'shaders/phong/menu/spot.frag', type:'text'},
             ["suzanne"]:{url:'models/Suzanne/Suzanne.obj', type:'text'},
             ["bricks.albedo"]:{url:'images/Bricks/albedo.jpg', type:'image'},
             ["bricks.ao"]:{url:'images/Bricks/AO.jpg', type:'image'},

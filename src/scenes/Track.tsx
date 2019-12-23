@@ -93,17 +93,24 @@ export default class TrackScene extends Scene {
     materials: Material[] = [];
     time: number;
     move:boolean;
+    currentEffect : string;
     timeobsacles:number;
     lights: Light[] = [
-        { type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
+        //{ type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
         { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1)},
     ];
     static readonly cubemapDirections = ['xneg', 'yneg', 'zneg', 'xpos', 'ypos', 'zpos'];
     frameBuffer: WebGLFramebuffer; // This will hold the frame buffer object
     readonly shaders = [
+        "blit",
         "grayscale",
+        "distortion",
+        "chrom-aberr",
+        "blur",
+        "radial-blur",
         "fog",
         "light",
+        "edge",
         "invert",
         "kernel"
     ];
@@ -318,10 +325,9 @@ export default class TrackScene extends Scene {
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target']);
         this.gl.texStorage2D(this.gl.TEXTURE_2D, 1, this.gl.RGBA8, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 
-        this.gl.getExtension('EXT_color_buffer_float');
-        this.textures['normal-target'] = this.gl.createTexture();
-        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['normal-target']);
-        this.gl.texStorage2D(this.gl.TEXTURE_2D, 1, this.gl.RGBA32F, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+        this.textures['color-target2'] = this.gl.createTexture();
+        this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target2']);
+        this.gl.texStorage2D(this.gl.TEXTURE_2D, 1, this.gl.RGBA8, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
 
         this.textures['depth-target'] = this.gl.createTexture();
         this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['depth-target']);
@@ -329,11 +335,11 @@ export default class TrackScene extends Scene {
         
         this.frameBuffer = this.gl.createFramebuffer();
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
-        /*
+    
         this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, this.textures['color-target'], 0);
-        this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT1, this.gl.TEXTURE_2D, this.textures['normal-target'], 0);
+        //this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, this.textures['color-target2'], 0);
         this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.TEXTURE_2D, this.textures['depth-target'], 0);
-*/
+        
         let status = this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER);
         if (status != this.gl.FRAMEBUFFER_COMPLETE) {
             if (status == this.gl.FRAMEBUFFER_INCOMPLETE_ATTACHMENT)
@@ -396,148 +402,212 @@ export default class TrackScene extends Scene {
         if (SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ))
        {
            console.log("aaaaaaaaaaaa");
+           this.currentEffect = "grayscale";
        }
        else
        {
+         this.currentEffect = "fog";
         if(this.move)
             this.time +=deltaTime;
         this.obstacletime+=deltaTime;
        }
-        this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
-        this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, -1, -70), vec3.fromValues(1, 1, 1));
-        this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-        this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
-        vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
-        var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
-        var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
-        this.objects['obb'].modelMatrix = mt1;
-        this.objects['pbb'].modelMatrix = mat4.create();//mat4.fromRotationTranslationScale(mt2,quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0),vec3.create(),vec3.fromValues(1,1,1));
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
+        this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+        {
+            this.gl.drawBuffers([this.gl.COLOR_ATTACHMENT0, this.gl.COLOR_ATTACHMENT1]);
+            this.gl.clearBufferfv(this.gl.COLOR, 0, [0.88, 0.65, 0.15, 1]);
+            this.gl.clearBufferfv(this.gl.COLOR, 1, [0, 0, 0, 1]);
+            this.gl.clearBufferfi(this.gl.DEPTH_STENCIL, 0, 1, 0);
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
+            this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, -1, -70), vec3.fromValues(1, 1, 1));
+            this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
+            this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
+            vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
+            var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
+            var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+            this.objects['obb'].modelMatrix = mt1;
+            this.objects['pbb'].modelMatrix = mat4.create();//mat4.fromRotationTranslationScale(mt2,quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0),vec3.create(),vec3.fromValues(1,1,1));
+            
         
-       
 
-         let first_light = true;
-        console.log(this.lights.length);
-        for(const light of this.lights){
-            if(!light.enabled) continue; // If the light is not enabled, continue
+            let first_light = true;
+            console.log(this.lights.length);
+            for(const light of this.lights){
+                if(!light.enabled) continue; // If the light is not enabled, continue
 
-            if(first_light){ // If tihs is the first light, there is no need for blending
-                this.gl.disable(this.gl.BLEND);
-                first_light = false;
-            }else{ // If this in not the first light, we need to blend it additively with all the lights drawn before
-                this.gl.enable(this.gl.BLEND);
-                this.gl.blendEquation(this.gl.FUNC_ADD);
-                this.gl.blendFunc(this.gl.ONE, this.gl.ONE); // This config will make the output = src_color + dest_color
-            }
-          
-
+                if(first_light){ // If tihs is the first light, there is no need for blending
+                    this.gl.disable(this.gl.BLEND);
+                    first_light = false;
+                }else{ // If this in not the first light, we need to blend it additively with all the lights drawn before
+                    this.gl.enable(this.gl.BLEND);
+                    this.gl.blendEquation(this.gl.FUNC_ADD);
+                    this.gl.blendFunc(this.gl.ONE, this.gl.ONE); // This config will make the output = src_color + dest_color
+                }
             
-            let program = this.programs[light.type]; // Get the shader to use with this light type
-            program.use(); // Use it
-            // Send the VP and camera position
-            program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
-            program.setUniform3f("cam_position", this.camera.position);
 
-            if(light.type == 'ambient'){
-                program.setUniform3f(`light.skyColor`, light.skyColor);
-                program.setUniform3f(`light.groundColor`, light.groundColor);
-                program.setUniform3f(`light.skyDirection`, light.skyDirection);
-            } else {
-                program.setUniform3f(`light.color`, light.color);
                 
-                if(light.type == 'directional' || light.type == 'spot'){
-                    program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), light.direction));
+                let program = this.programs[light.type]; // Get the shader to use with this light type
+                program.use(); // Use it
+                // Send the VP and camera position
+                program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
+                program.setUniform3f("cam_position", this.camera.position);
+
+                if(light.type == 'ambient'){
+                    program.setUniform3f(`light.skyColor`, light.skyColor);
+                    program.setUniform3f(`light.groundColor`, light.groundColor);
+                    program.setUniform3f(`light.skyDirection`, light.skyDirection);
+                } else {
+                    program.setUniform3f(`light.color`, light.color);
+                    
+                    if(light.type == 'directional' || light.type == 'spot'){
+                        program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), light.direction));
+                    }
+                    if(light.type == 'point' || light.type == 'spot'){
+                        program.setUniform3f(`light.position`, light.position);
+                        program.setUniform1f(`light.attenuation_quadratic`, light.attenuation_quadratic);
+                        program.setUniform1f(`light.attenuation_linear`, light.attenuation_linear);
+                        program.setUniform1f(`light.attenuation_constant`, light.attenuation_constant);
+                    }
+                    if(light.type == 'spot'){
+                        program.setUniform1f(`light.inner_cone`, light.inner_cone);
+                        program.setUniform1f(`light.outer_cone`, light.outer_cone);
+                    }
                 }
-                if(light.type == 'point' || light.type == 'spot'){
-                    program.setUniform3f(`light.position`, light.position);
-                    program.setUniform1f(`light.attenuation_quadratic`, light.attenuation_quadratic);
-                    program.setUniform1f(`light.attenuation_linear`, light.attenuation_linear);
-                    program.setUniform1f(`light.attenuation_constant`, light.attenuation_constant);
-                }
-                if(light.type == 'spot'){
-                    program.setUniform1f(`light.inner_cone`, light.inner_cone);
-                    program.setUniform1f(`light.outer_cone`, light.outer_cone);
-                }
-            }
 
-            for(let name in this.objects)
-            {
-                let obj = this.objects[name];
-
-                // Create model matrix for the object
-                program.setUniformMatrix4fv("M", false, obj.modelMatrix);
-                program.setUniformMatrix4fv("M_it", true, mat4.invert(mat4.create(), obj.modelMatrix));
-                
-                // Send material properties and bind the textures
-                program.setUniform3f("material.albedo_tint", obj.material.albedo_tint);
-                program.setUniform3f("material.specular_tint", obj.material.specular_tint);
-                program.setUniform3f("material.emissive_tint", obj.material.emissive_tint);
-                program.setUniform1f("material.roughness_scale", obj.material.roughness_scale);
-
-                this.gl.activeTexture(this.gl.TEXTURE0);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.albedo);
-                this.gl.bindSampler(0, this.samplers['regular']);
-                program.setUniform1i("material.albedo", 0);
-
-                this.gl.activeTexture(this.gl.TEXTURE1);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.specular);
-                this.gl.bindSampler(1, this.samplers['regular']);
-                program.setUniform1i("material.specular", 1);
-
-                this.gl.activeTexture(this.gl.TEXTURE2);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.roughness);
-                this.gl.bindSampler(2, this.samplers['regular']);
-                program.setUniform1i("material.roughness", 2);
-
-                this.gl.activeTexture(this.gl.TEXTURE3);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.emissive);
-                this.gl.bindSampler(3, this.samplers['regular']);
-                program.setUniform1i("material.emissive", 3);
-
-                this.gl.activeTexture(this.gl.TEXTURE4);
-                this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.ambient_occlusion);
-                this.gl.bindSampler(4, this.samplers['regular']);
-                program.setUniform1i("material.ambient_occlusion", 4);
-                
-                // Draw the object
-                if (name == 'obb' )
+                for(let name in this.objects)
                 {
-                    obj.mesh.draw(this.gl.LINE_LOOP);
-                }
-                else if (name == 'pbb' )
-                {
+                    let obj = this.objects[name];
 
-                }
-                else
-                    obj.mesh.draw(this.gl.TRIANGLES);
-            } 
-            
-            if(true){
-                this.gl.cullFace(this.gl.FRONT);
-                this.gl.depthMask(false);
-    
-                this.programs['sky'].use();
-    
-                this.programs['sky'].setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
-                this.programs['sky'].setUniform3f("cam_position", this.camera.position);
-    
-                let skyMat = mat4.create();
-                mat4.translate(skyMat, skyMat, this.camera.position);
+                    // Create model matrix for the object
+                    program.setUniformMatrix4fv("M", false, obj.modelMatrix);
+                    program.setUniformMatrix4fv("M_it", true, mat4.invert(mat4.create(), obj.modelMatrix));
+                    
+                    // Send material properties and bind the textures
+                    program.setUniform3f("material.albedo_tint", obj.material.albedo_tint);
+                    program.setUniform3f("material.specular_tint", obj.material.specular_tint);
+                    program.setUniform3f("material.emissive_tint", obj.material.emissive_tint);
+                    program.setUniform1f("material.roughness_scale", obj.material.roughness_scale);
+
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.albedo);
+                    this.gl.bindSampler(0, this.samplers['regular']);
+                    program.setUniform1i("material.albedo", 0);
+
+                    this.gl.activeTexture(this.gl.TEXTURE1);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.specular);
+                    this.gl.bindSampler(1, this.samplers['regular']);
+                    program.setUniform1i("material.specular", 1);
+
+                    this.gl.activeTexture(this.gl.TEXTURE2);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.roughness);
+                    this.gl.bindSampler(2, this.samplers['regular']);
+                    program.setUniform1i("material.roughness", 2);
+
+                    this.gl.activeTexture(this.gl.TEXTURE3);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.emissive);
+                    this.gl.bindSampler(3, this.samplers['regular']);
+                    program.setUniform1i("material.emissive", 3);
+
+                    this.gl.activeTexture(this.gl.TEXTURE4);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.ambient_occlusion);
+                    this.gl.bindSampler(4, this.samplers['regular']);
+                    program.setUniform1i("material.ambient_occlusion", 4);
+                    
+                    // Draw the object
+                    if (name == 'obb' )
+                    {
+                        obj.mesh.draw(this.gl.LINE_LOOP);
+                    }
+                    else if (name == 'pbb' )
+                    {
+
+                    }
+                    else
+                        obj.mesh.draw(this.gl.TRIANGLES);
+                } 
                 
-                this.programs['sky'].setUniformMatrix4fv("M", false, skyMat);
-    
-                this.programs['sky'].setUniform4f("tint", [1, 1, 1, 1]);
-    
-                this.gl.activeTexture(this.gl.TEXTURE0);
-                this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, this.textures['environment']);
-                this.programs['sky'].setUniform1i('cube_texture_sampler', 0);
-                this.gl.bindSampler(0, this.samplers['regular']);
-    
-                this.meshes['cube'].draw(this.gl.TRIANGLES);
+                if(true){
+                    this.gl.cullFace(this.gl.FRONT);
+                    this.gl.depthMask(false);
+        
+                    this.programs['sky'].use();
+        
+                    this.programs['sky'].setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
+                    this.programs['sky'].setUniform3f("cam_position", this.camera.position);
+        
+                    let skyMat = mat4.create();
+                    mat4.translate(skyMat, skyMat, this.camera.position);
+                    
+                    this.programs['sky'].setUniformMatrix4fv("M", false, skyMat);
+        
+                    this.programs['sky'].setUniform4f("tint", [1, 1, 1, 1]);
+        
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_CUBE_MAP, this.textures['environment']);
+                    this.programs['sky'].setUniform1i('cube_texture_sampler', 0);
+                    this.gl.bindSampler(0, this.samplers['regular']);
+        
+                    this.meshes['cube'].draw(this.gl.TRIANGLES);
+                    
+                    this.gl.cullFace(this.gl.BACK);
+                    this.gl.depthMask(true);
+                } 
                 
-                this.gl.cullFace(this.gl.BACK);
-                this.gl.depthMask(true);
-            } 
+            }
+        }
+        
+        this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
+
+        this.gl.viewport(0, 0, this.gl.drawingBufferWidth, this.gl.drawingBufferHeight);
+        {
+            this.gl.clearColor(0.08, 0.32, 0.44, 1);
+            this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
+
+            this.gl.bindSampler(0, this.samplers['postprocess']);
+            this.gl.bindSampler(1, this.samplers['postprocess']);
+
+            let program: ShaderProgram;
             
+            switch (this.currentEffect) {
+                case "none": // This will draw the color target as is
+                    program = this.programs['blit'];
+                    program.use();
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target']);
+                    program.setUniform1i('color_sampler', 0);
+                    break;
+                case "grayscale": // This will apply a grayscale operation on the color before rendering it
+                    program = this.programs['grayscale'];
+                    program.use();
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target']);
+                    program.setUniform1i('color_sampler', 0);
+                    break;
+                case "kernel":  // This will blur the color target using a 2D Gaussian Blur
+                    program = this.programs['kernel'];
+                    program.use();
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target']);
+                    program.setUniform1i('color_sampler', 0);
+                    break;
+                case "fog": // This will use the depth target to reconstruct the view position and add fog to the scene
+                    program = this.programs['fog'];
+                    program.use();
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target']);
+                    program.setUniform1i('color_sampler', 0);
+                    this.gl.activeTexture(this.gl.TEXTURE1);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['depth-target']);
+                    program.setUniform1i('depth_sampler', 1);
+                    program.setUniform1f('fog_distance', 10);
+                    program.setUniform4f('fog_color', [0.4, 0.4, 0.4, 1]);
+                    program.setUniformMatrix4fv('P_i', false, mat4.invert(mat4.create(), this.camera.ProjectionMatrix));
+                    break;
+                default:
+                    this.gl.useProgram(null);
+            }
+
+            this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
         }
        
     }

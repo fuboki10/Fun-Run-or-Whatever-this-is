@@ -7,7 +7,8 @@ in vec2 v_texcoord;
 in vec3 v_world;
 in vec3 v_normal;
 in vec3 v_view;
-layout(location=0) out vec4 dcolor; // This will be sent to the first attachment
+
+out vec4 color;
 
 struct Material {
     sampler2D albedo;
@@ -65,7 +66,7 @@ void main(){
     vec3 v = normalize(v_view);
     // No more ambient here, it is moved to ambient.frag
     // Also, the light color is no longer seperated by diffuse and specular
-    dcolor = vec4(
+    color = vec4(
         (sampled.albedo*diffuse(n, -light.direction) + 
         sampled.specular*specular(n, -light.direction, v, sampled.shininess)) * light.color,
         1.0f
