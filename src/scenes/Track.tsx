@@ -13,13 +13,6 @@ function triangle(x: number): number {
     let i = Math.floor(x);
     return (i%2==0)?(x-i):(1+i-x);
 }
-interface AmbientLight {
-    type: 'ambient',
-    enabled: boolean,
-    skyColor: vec3,
-    groundColor: vec3,
-    skyDirection: vec3
-};
 
 interface DirectionalLight {
     type: 'directional',
@@ -28,38 +21,9 @@ interface DirectionalLight {
     direction: vec3
 };
 
-interface PointLight {
-    type: 'point',
-    enabled: boolean,
-    color: vec3,
-    position: vec3,
-    attenuation_quadratic: number,
-    attenuation_linear: number,
-    attenuation_constant: number
-};
 
-interface SpotLight {
-    type: 'spot',
-    enabled: boolean,
-    color: vec3,
-    position: vec3,
-    direction: vec3,
-    attenuation_quadratic: number,
-    attenuation_linear: number,
-    attenuation_constant: number,
-    inner_cone: number,
-    outer_cone: number
-};
+type Light = DirectionalLight ;
 
-// This union type: it can be any of the specified types
-type Light = AmbientLight | DirectionalLight | PointLight | SpotLight;
-
-// This will store the material properties
-// To be more consistent with modern workflows, we use what is called albedo to define the diffuse and ambient
-// And since specular power (shininess) is in the range 0 to infinity and the more popular roughness paramater is in the range 0 to 1, we read the roughness from the image and convert it to shininess (specular power)
-// We also add an emissive properties in case the object itself emits light
-// Finally, while the ambient is naturally the same a the diffuse, some areas recieve less ambient than other (e.g. folds), so we use the ambient occlusion texture to darken the ambient in these areas
-// We also add tints and scales to control the properties without using multiple textures
 interface Material {
     albedo: WebGLTexture,
     albedo_tint: vec3,
@@ -81,6 +45,8 @@ interface Object3D {
 };
 
 
+const canvas: HTMLCanvasElement = document.querySelector("#text");
+const ctx = canvas.getContext("2d");
 
 
 export default class TrackScene extends Scene {
@@ -91,27 +57,20 @@ export default class TrackScene extends Scene {
     textures: {[name: string]: WebGLTexture} = {};
     samplers: {[name: string]: WebGLSampler} = {};
     materials: Material[] = [];
+    currScore:number;
+    currFrame:number;
+    Punish:number;
     time: number;
     move:boolean;
+    ingame:boolean;
+    gameOver:boolean;
     currentEffect : string;
     timeobsacles:number;
-    lights: Light[] = [
-        //{ type: "ambient", enabled: true, skyColor: vec3.fromValues(0.4, 0.3, 0.4), groundColor: vec3.fromValues(0.1, 0.1, 0.1), skyDirection: vec3.fromValues(0,1,0)},
-        { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1)},
-    ];
+    light: Light = { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1)};
     static readonly cubemapDirections = ['xneg', 'yneg', 'zneg', 'xpos', 'ypos', 'zpos'];
     frameBuffer: WebGLFramebuffer; // This will hold the frame buffer object
     readonly shaders = [
-        "blit",
-        "grayscale",
-        "distortion",
-        "chrom-aberr",
-        "blur",
-        "radial-blur",
         "fog",
-        "light",
-        "edge",
-        "invert",
         "kernel"
     ];
     randoms:number[];
@@ -164,15 +123,32 @@ export default class TrackScene extends Scene {
     } 
     
     public start(): void {
+        this.ingame = false;
+        this.gameOver = false;
+        this.Punish = 0;
+        this.currFrame = 0;
+        this.currScore = 0;
+        ctx.font = "35px Squada One";
+        ctx.fillStyle = "WHITE";
+        ctx.textAlign = "center";
         this.time = 0;
         this.obstacletime=0;
         document.addEventListener("keydown", (ev)=>{
+            if(this.gameOver)
+            {
+                this.game.startScene("Choose Material");
+            }
+            else
+            {
+
+            
             switch(ev.key){
                 case Key.Enter:
                     this.move = true;
                     break;
                 case ' ':
                     ev.preventDefault();
+            }
             }
         })
         document.addEventListener("keyup", (ev)=>{
@@ -188,13 +164,13 @@ export default class TrackScene extends Scene {
         this.programs["3d"].attach(this.game.loader.resources["mrt.vert"], this.gl.VERTEX_SHADER);
         this.programs["3d"].attach(this.game.loader.resources["mrt.frag"], this.gl.FRAGMENT_SHADER);
         this.programs["3d"].link();
-        // For each light type, compile and link a shader
-        for(let type of ['ambient', 'directional', 'point', 'spot']){
-            this.programs[type] = new ShaderProgram(this.gl);
-            this.programs[type].attach(this.game.loader.resources['light.vert'], this.gl.VERTEX_SHADER);
-            this.programs[type].attach(this.game.loader.resources[`${type}.frag`], this.gl.FRAGMENT_SHADER);
-            this.programs[type].link();
-        }
+ 
+        
+        this.programs['directional'] = new ShaderProgram(this.gl);
+        this.programs['directional'].attach(this.game.loader.resources['light.vert'], this.gl.VERTEX_SHADER);
+        this.programs['directional'].attach(this.game.loader.resources['directional.frag'], this.gl.FRAGMENT_SHADER);
+        this.programs['directional'].link();
+        
         for (let shader of this.shaders) {
             this.programs[shader] = new ShaderProgram(this.gl);
             this.programs[shader].attach(this.game.loader.resources["fullscreen.vert"], this.gl.VERTEX_SHADER);
@@ -214,8 +190,7 @@ export default class TrackScene extends Scene {
         this.meshes['pbb'] = MeshUtils.Cube(this.gl);
         this.meshes['obb'] = MeshUtils.Cube(this.gl);
         this.meshes['cube'] = MeshUtils.Cube(this.gl);
-        //this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
-        //this.meshes['obstacle1'] = MeshUtils.LoadOBJMesh(this.gl, this.game.loader.resources["house-model"]);
+        
         // Load the textures
         this.textures['bricks.albedo'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.albedo']);
         this.textures['bricks.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['bricks.ao']);
@@ -244,12 +219,7 @@ export default class TrackScene extends Scene {
         this.textures['snow.ao'] = TextureUtils.LoadImage(this.gl, this.game.loader.resources['snow.ao']);
         this.textures['white'] = TextureUtils.SingleColor(this.gl, [255, 255, 255, 255]);
         this.textures['black'] = TextureUtils.SingleColor(this.gl, [0, 0, 0, 255]);
-
-        
-
-
-                  
-                
+                       
         // Create the 3D ojbects
        this.objects['ground'] = {
             mesh: this.meshes['track'],
@@ -337,7 +307,6 @@ export default class TrackScene extends Scene {
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
     
         this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, this.textures['color-target'], 0);
-        //this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.COLOR_ATTACHMENT0, this.gl.TEXTURE_2D, this.textures['color-target2'], 0);
         this.gl.framebufferTexture2D(this.gl.FRAMEBUFFER, this.gl.DEPTH_ATTACHMENT, this.gl.TEXTURE_2D, this.textures['depth-target'], 0);
         
         let status = this.gl.checkFramebufferStatus(this.gl.FRAMEBUFFER);
@@ -364,13 +333,12 @@ export default class TrackScene extends Scene {
         this.gl.samplerParameteri(this.samplers['regular'], this.gl.TEXTURE_WRAP_T, this.gl.REPEAT);
         this.gl.samplerParameteri(this.samplers['regular'], this.gl.TEXTURE_MAG_FILTER, this.gl.LINEAR);
         this.gl.samplerParameteri(this.samplers['regular'], this.gl.TEXTURE_MIN_FILTER, this.gl.LINEAR_MIPMAP_LINEAR);
-
+        // Create a Post Process sampler for effects
         this.samplers['postprocess'] = this.gl.createSampler();
         this.gl.samplerParameteri(this.samplers['postprocess'], this.gl.TEXTURE_WRAP_S, this.gl.CLAMP_TO_EDGE);
         this.gl.samplerParameteri(this.samplers['postprocess'], this.gl.TEXTURE_WRAP_T, this.gl.CLAMP_TO_EDGE);
         this.gl.samplerParameteri(this.samplers['postprocess'], this.gl.TEXTURE_MAG_FILTER, this.gl.NEAREST);
         this.gl.samplerParameteri(this.samplers['postprocess'], this.gl.TEXTURE_MIN_FILTER, this.gl.NEAREST);
-
         // Create a camera and a controller
         this.camera = new Camera();
         this.camera.type = 'perspective';
@@ -379,9 +347,8 @@ export default class TrackScene extends Scene {
         this.camera.aspectRatio = this.gl.drawingBufferWidth/this.gl.drawingBufferHeight;
         
         this.controller = new FlyCameraController(this.camera, this.game.input);
-       this.controller.movementSensitivity = 0.01;
+        this.controller.movementSensitivity = 0.01;
 
-        // As usual, we enable face culling and depth testing
         this.gl.enable(this.gl.CULL_FACE);
         this.gl.cullFace(this.gl.BACK);
         this.gl.frontFace(this.gl.CCW);
@@ -389,7 +356,6 @@ export default class TrackScene extends Scene {
         this.gl.enable(this.gl.DEPTH_TEST);
         this.gl.depthFunc(this.gl.LEQUAL);
 
-        // Use a dark grey clear color
         this.gl.clearColor(0.1,0.1,0.1,1);
         var a= vec4.fromValues(0,0,0,0);
 
@@ -397,18 +363,47 @@ export default class TrackScene extends Scene {
     
     public draw(deltaTime: number): void
     {
-        
+        this.currFrame++;
+        ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
         this.controller.update(deltaTime); // Update camera
-        if (SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ))
+        if (SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ) && (this.ingame||this.gameOver) )
        {
-           console.log("aaaaaaaaaaaa");
-           this.currentEffect = "grayscale";
+            this.gameOver = true;
+            this.currentEffect = "kernel";
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.font = "120px Squada One";
+            ctx.fillStyle = "RED"
+            ctx.textAlign = "center";
+            ctx.fillText('W A S T E D', canvas.width/2, canvas.height/2);
+            ctx.font = "45px Squada One";
+            ctx.fillStyle = "WHITE"
+            ctx.textAlign = "center";
+            ctx.fillText(` YOUR SCORE : ${this.currScore}`, canvas.width/2, canvas.height/3);
+            ctx.fillText( 'Press Any Key To Play Again' , canvas.width/2, 2*canvas.height/3);
        }
        else
        {
+           this.ingame = true;
          this.currentEffect = "fog";
         if(this.move)
+        {
+            this.Punish = 0;
             this.time +=deltaTime;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            this.currScore += 1;
+            ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
+        }
+        else{
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if(this.currFrame%20==0)
+                this.Punish = this.Punish + 1
+            if(this.currFrame%(Math.max( 1,20 - this.Punish)) == 0)
+            {
+                this.currScore = Math.max(this.currScore - 1,0);
+            }
+            ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
+
+        }
         this.obstacletime+=deltaTime;
        }
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, this.frameBuffer);
@@ -428,52 +423,17 @@ export default class TrackScene extends Scene {
             this.objects['obb'].modelMatrix = mt1;
             this.objects['pbb'].modelMatrix = mat4.create();//mat4.fromRotationTranslationScale(mt2,quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0),vec3.create(),vec3.fromValues(1,1,1));
             
-        
 
-            let first_light = true;
-            console.log(this.lights.length);
-            for(const light of this.lights){
-                if(!light.enabled) continue; // If the light is not enabled, continue
-
-                if(first_light){ // If tihs is the first light, there is no need for blending
-                    this.gl.disable(this.gl.BLEND);
-                    first_light = false;
-                }else{ // If this in not the first light, we need to blend it additively with all the lights drawn before
-                    this.gl.enable(this.gl.BLEND);
-                    this.gl.blendEquation(this.gl.FUNC_ADD);
-                    this.gl.blendFunc(this.gl.ONE, this.gl.ONE); // This config will make the output = src_color + dest_color
-                }
-            
-
-                
-                let program = this.programs[light.type]; // Get the shader to use with this light type
+           
+                let light = this.light;
+                this.gl.disable(this.gl.BLEND);          
+                let program = this.programs['directional']; 
                 program.use(); // Use it
                 // Send the VP and camera position
                 program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
                 program.setUniform3f("cam_position", this.camera.position);
-
-                if(light.type == 'ambient'){
-                    program.setUniform3f(`light.skyColor`, light.skyColor);
-                    program.setUniform3f(`light.groundColor`, light.groundColor);
-                    program.setUniform3f(`light.skyDirection`, light.skyDirection);
-                } else {
-                    program.setUniform3f(`light.color`, light.color);
-                    
-                    if(light.type == 'directional' || light.type == 'spot'){
-                        program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), light.direction));
-                    }
-                    if(light.type == 'point' || light.type == 'spot'){
-                        program.setUniform3f(`light.position`, light.position);
-                        program.setUniform1f(`light.attenuation_quadratic`, light.attenuation_quadratic);
-                        program.setUniform1f(`light.attenuation_linear`, light.attenuation_linear);
-                        program.setUniform1f(`light.attenuation_constant`, light.attenuation_constant);
-                    }
-                    if(light.type == 'spot'){
-                        program.setUniform1f(`light.inner_cone`, light.inner_cone);
-                        program.setUniform1f(`light.outer_cone`, light.outer_cone);
-                    }
-                }
-
+                program.setUniform3f(`light.color`, light.color);
+                program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), light.direction));
                 for(let name in this.objects)
                 {
                     let obj = this.objects[name];
@@ -554,7 +514,6 @@ export default class TrackScene extends Scene {
                 } 
                 
             }
-        }
         
         this.gl.bindFramebuffer(this.gl.FRAMEBUFFER, null);
 
@@ -569,20 +528,6 @@ export default class TrackScene extends Scene {
             let program: ShaderProgram;
             
             switch (this.currentEffect) {
-                case "none": // This will draw the color target as is
-                    program = this.programs['blit'];
-                    program.use();
-                    this.gl.activeTexture(this.gl.TEXTURE0);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target']);
-                    program.setUniform1i('color_sampler', 0);
-                    break;
-                case "grayscale": // This will apply a grayscale operation on the color before rendering it
-                    program = this.programs['grayscale'];
-                    program.use();
-                    this.gl.activeTexture(this.gl.TEXTURE0);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, this.textures['color-target']);
-                    program.setUniform1i('color_sampler', 0);
-                    break;
                 case "kernel":  // This will blur the color target using a 2D Gaussian Blur
                     program = this.programs['kernel'];
                     program.use();
@@ -609,10 +554,11 @@ export default class TrackScene extends Scene {
 
             this.gl.drawArrays(this.gl.TRIANGLES, 0, 3);
         }
-       
+        
     }
     
     public end(): void {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
         for(let key in this.programs)
             this.programs[key].dispose();
         this.programs = {};

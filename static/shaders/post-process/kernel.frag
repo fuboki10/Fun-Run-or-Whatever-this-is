@@ -41,4 +41,6 @@ void main(){
         total_weight+=weight;
     }
     color /= total_weight; // We divide by the total weight to normalize the sum
+     float luminance = dot(color.rgb, vec3(0.3086, 0.6094, 0.0820));
+     color = vec4(luminance,luminance,luminance,1.0f);
 }
