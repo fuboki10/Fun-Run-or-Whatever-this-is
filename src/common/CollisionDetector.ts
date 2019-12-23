@@ -1,7 +1,8 @@
 // Collision Detector
-import { vec3, mat4, vec4,quat } from 'gl-matrix';
+import { vec3, mat4, vec4,quat, vec2 } from 'gl-matrix';
 import Mesh from './mesh';
 import TrackScene from '../scenes/Track';
+import { distance } from 'gl-matrix/src/gl-matrix/vec2';
 export class AABB {
     public min : vec3;
     public max : vec3;
@@ -51,7 +52,50 @@ let between = function(b:number , n1:number, n2:number) {
     let d2 = Math.abs(b-n2);
     return (d1+d2 - td <= Number.EPSILON)
 }
+export function SphereCollides(r : number ,c : vec3, a : AABB, b : AABB, mat_a : mat4, mat_b : mat4) : boolean
+{
+    
+    var omax = b.max;
+    var omin = b.min;
+    var omax4 = vec4.fromValues(omax[0],omax[1],omax[2],1);
+    var omin4 = vec4.fromValues(omin[0],omin[1],omin[2],1);
+    var mto = mat4.transpose(mat4.create(),mat_b);
+    omax4 = matbyvec(mto,omax4);
+    omin4 = matbyvec(mto,omin4);
+   for(let i =0 ; i < 3 ; i++)
+    {
+        if (omax4[i] <= omin4[i])
+        {
+            let tmp = omax4[i];
+            omax4[i] = omin4[i];
+            omin4[i] = tmp;
+        }
+    }
+    //console.log(omax4[2],omin4[2]);
 
+    let x  = c[0] ;
+    let y  = c[1] ;
+    let z  = c[2] ;
+
+    if( x < omin4[0])
+        x = omin4[0];
+    else if (x > omax4[0])
+        x = omax4[0]
+
+    if( y < omin4[1])
+        y = omin4[1];
+    else if (y > omax4[1])
+        y = omax4[1]
+
+    if( z < omin4[2])
+        z = omin4[2];
+    else if (z > omax4[2])
+        z = omax4[2]
+
+    if( r >= vec3.distance(c,vec3.fromValues(x,y,z)))
+    return true;
+ 
+}
 export function Collides(a : AABB, b : AABB, mat_a : mat4, mat_b : mat4) : boolean
 {
     let meetingAxies = 0; // how many axies are colliding between the AABBs (must be at least 3 to be true)
@@ -67,40 +111,13 @@ export function Collides(a : AABB, b : AABB, mat_a : mat4, mat_b : mat4) : boole
     var mto = mat4.transpose(mat4.create(),mat_b);
     omax4 = matbyvec(mto,omax4);
     omin4 = matbyvec(mto,omin4);
-    /*
-    console.log("=========================player=============================");
-    console.log("pmin", pmin4[0],pmin4[1],pmin4[2])
-    console.log("pmax", pmax4[0],pmax4[1],pmax4[2])
-    console.log("=========================obstac=============================");
-    console.log("omin", omin4[0],omin4[1],omin4[2])
-    console.log("omax", omax4[0],omax4[1],omax4[2])
-    */
-    /*
-    let amin = vec4.fromValues(a.min[0], a.min[1], a.min[2],1);
-    let amax = vec4.fromValues(a.max[0], a.max[1], a.max[2],1);
-    let bmin = vec4.fromValues(b.min[0], b.min[1], b.min[2],1);
-    let bmax = vec4.fromValues(b.max[0], b.max[1], b.max[2],1);
-    amin = matbyvec(mat4.transpose(mat4.create(),mat_a), amin);
-    amax = matbyvec(mat4.transpose(mat4.create(),mat_a), amax);
-    bmin = matbyvec(mat4.transpose(mat4.create(),mat_b), bmin);
-    bmax = matbyvec(mat4.transpose(mat4.create(),mat_b), bmax);
-    if ( (bmin[0] > amin[0]) && (bmin[0] < amax[0]) ) meetingAxies++;
-    if ( (bmin[1] > amin[1]) && (bmin[1] < amax[1]) ) meetingAxies++;
-    if ( (bmin[2] > amin[2]) && (bmin[2] < amax[2]) ) meetingAxies++;*/
-
-    if( between(pmin4[0],omin4[0],omax4[0])  || between(pmax4[0],omin4[0],omax4[0]) )
+ 
+    if( between(pmin4[0],omin4[0],omax4[0]) || between(pmax4[0],omin4[0],omax4[0]) || between(omin4[0],pmin4[0],pmax4[0]) || between(omax4[0],pmin4[0],pmax4[0]) )
     meetingAxies++;
-    if( between(pmin4[1],omin4[1],omax4[1])  || between(pmax4[1],omin4[1],omax4[1]) )
+    if( between(pmin4[1],omin4[1],omax4[1]) || between(pmax4[1],omin4[1],omax4[1]) || between(omin4[1],pmin4[1],pmax4[1]) || between(omax4[1],pmin4[1],pmax4[1]) )
     meetingAxies++;
-    if( between(pmin4[2],omin4[2],omax4[2])  || between(pmax4[2],omin4[2],omax4[2]) )
+    if( between(pmin4[2],omin4[2],omax4[2]) || between(pmax4[2],omin4[2],omax4[2]) || between(omin4[2],pmin4[2],pmax4[2]) || between(omax4[2],pmin4[2],pmax4[2]))
     meetingAxies++;
-    /*
-    if( (pmin4[0] >= omin4[0] && pmin4[0] <= omax4[0]) || (pmax4[0] >= omin4[0] && pmax4[0] <= omax4[0]) )
-  
-    if( (pmin4[1] >= omin4[1] && pmin4[1] <= omax4[1]) || (pmax4[1] >= omin4[1] && pmax4[1] <= omax4[1]) )
-    
-    if( (pmin4[2] >= omin4[2] && pmin4[2] <= omax4[2]) || (pmax4[2] >= omin4[2] && pmax4[2] <= omax4[2]))
-    console.log("z in");*/
 
     return meetingAxies == 3;
 }
