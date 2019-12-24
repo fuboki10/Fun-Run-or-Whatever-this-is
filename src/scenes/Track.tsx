@@ -228,22 +228,22 @@ export default class TrackScene extends Scene {
             aabb : null,
             physics : null
         };
-        // this.objects['obstacle1'] = {
-        //     mesh: this.meshes['obstacle1'],
-        //     material: {albedo: this.textures['snow.albedo'],
-        //     albedo_tint: vec3.fromValues(1, 1, 1),
-        //     specular: this.textures['snow.specular'],
-        //     specular_tint: vec3.fromValues(1, 1, 1),
-        //     roughness: this.textures['snow.roughness'],
-        //     roughness_scale: 1,
-        //     emissive: this.textures['black'],
-        //     emissive_tint: vec3.fromValues(1, 1, 1),
-        //     ambient_occlusion: this.textures['white']},
-        //     modelMatrix: mat4.create(),
-        //     aabb : new AABB(this.meshes['obstacle1']),
-        //     physics : null
-        // };
-        //console.log(this.objects['obstacle1'].aabb);
+        this.objects['obstacle1'] = {
+            mesh: this.meshes['obstacle1'],
+            material: {albedo: this.textures['snow.albedo'],
+            albedo_tint: vec3.fromValues(1, 1, 1),
+            specular: this.textures['snow.specular'],
+            specular_tint: vec3.fromValues(1, 1, 1),
+            roughness: this.textures['snow.roughness'],
+            roughness_scale: 1,
+            emissive: this.textures['black'],
+            emissive_tint: vec3.fromValues(1, 1, 1),
+            ambient_occlusion: this.textures['white']},
+            modelMatrix: mat4.create(),
+            aabb : new AABB(this.meshes['obstacle1']),
+            physics : null
+        };
+        console.log(this.objects['obstacle1'].aabb);
         this.objects['obb'] = {
             mesh: this.meshes['obb'],
             material: {
@@ -358,7 +358,8 @@ export default class TrackScene extends Scene {
         ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
         this.controller.update(deltaTime); // Update camera
         //if (SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ) && (this.ingame||this.gameOver) )
-        if ( this.doescollied&& (this.ingame||this.gameOver) )
+        console.log(this.doescollied);
+        if ( this.doescollied && (this.ingame||this.gameOver) )
         {
             this.gameOver = true;
             this.currentEffect = "kernel";
@@ -408,11 +409,11 @@ export default class TrackScene extends Scene {
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
             this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, -1, -70), vec3.fromValues(1, 1, 1));
             this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-            // this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
-            // vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
-            // var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
-            // var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
-            // this.objects['obb'].modelMatrix = mt1;
+            this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
+            vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
+            var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
+            var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+            this.objects['obb'].modelMatrix = mt1;
             this.objects['pbb'].modelMatrix = mat4.create();//mat4.fromRotationTranslationScale(mt2,quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0),vec3.create(),vec3.fromValues(1,1,1));
             
 
@@ -423,9 +424,9 @@ export default class TrackScene extends Scene {
                 program.use(); // Use it
                 program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
                 program.setUniform3f("cam_position", this.camera.position);
-                program.setUniform3f(`light.color`, vec3.fromValues(0.7,0.7,0.8));
-                program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), vec3.fromValues(-1,-1,-1)));
-                this.updateobstacles(deltaTime);      
+                program.setUniform3f('light.color', vec3.fromValues(0.7,0.7,0.8));
+                program.setUniform3f('light.direction', vec3.normalize(vec3.create(), vec3.fromValues(-1,-1,-1)));
+                
                 for(let name in this.objects)
                 {
                     let obj = this.objects[name];
@@ -466,10 +467,11 @@ export default class TrackScene extends Scene {
                     program.setUniform1i("material.ambient_occlusion", 4);
                     
                     // Draw the object
-                    if (name == 'obb' )
+                    
+                    if (name.substr(0,3) =='obb' )
                     {
-
                         obj.mesh.draw(this.gl.LINE_LOOP);
+                        
                     }
                     else if (name == 'pbb' )
                     {
@@ -477,9 +479,75 @@ export default class TrackScene extends Scene {
                     }
                     else
                         obj.mesh.draw(this.gl.TRIANGLES);
-                } 
-                this.deleteobs();
+                }
+                this.updateobstacles(deltaTime);
+                for(let i=0;i<3;i++){      
+                for(let name in this.obstacles[i].Objects){
+                    let program = this.programs['directional']; 
+                    program.use(); // Use it
+                    program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
+                    program.setUniform3f("cam_position", this.camera.position);
+                    program.setUniform3f('light.color', vec3.fromValues(0.7,0.7,0.8));
+                    program.setUniform3f('light.direction', vec3.normalize(vec3.create(), vec3.fromValues(-1,-1,-1)));
                     
+                   
+                        let obj = this.obstacles[i].Objects[name];
+    
+                        // Create model matrix for the object
+                        program.setUniformMatrix4fv("M", false, obj.modelMatrix);
+                        program.setUniformMatrix4fv("M_it", true, mat4.invert(mat4.create(), obj.modelMatrix));
+                        
+                        // Send material properties and bind the textures
+                        program.setUniform3f("material.albedo_tint", obj.material.albedo_tint);
+                        program.setUniform3f("material.specular_tint", obj.material.specular_tint);
+                        program.setUniform3f("material.emissive_tint", obj.material.emissive_tint);
+                        program.setUniform1f("material.roughness_scale", obj.material.roughness_scale);
+    
+                        this.gl.activeTexture(this.gl.TEXTURE0);
+                        this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.albedo);
+                        this.gl.bindSampler(0, this.samplers['regular']);
+                        program.setUniform1i("material.albedo", 0);
+    
+                        this.gl.activeTexture(this.gl.TEXTURE1);
+                        this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.specular);
+                        this.gl.bindSampler(1, this.samplers['regular']);
+                        program.setUniform1i("material.specular", 1);
+    
+                        this.gl.activeTexture(this.gl.TEXTURE2);
+                        this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.roughness);
+                        this.gl.bindSampler(2, this.samplers['regular']);
+                        program.setUniform1i("material.roughness", 2);
+    
+                        this.gl.activeTexture(this.gl.TEXTURE3);
+                        this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.emissive);
+                        this.gl.bindSampler(3, this.samplers['regular']);
+                        program.setUniform1i("material.emissive", 3);
+    
+                        this.gl.activeTexture(this.gl.TEXTURE4);
+                        this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.ambient_occlusion);
+                        this.gl.bindSampler(4, this.samplers['regular']);
+                        program.setUniform1i("material.ambient_occlusion", 4);
+                        
+                        // Draw the object
+                        var mt1 = mat4.multiply(mat4.create(),obj.modelMatrix,obj.aabb.t);
+                        var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+                        this.objects['obb'].modelMatrix = mt1;
+                        this.objects['obb'].mesh.draw(this.gl.LINE_LOOP);
+                        console.log(SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ));
+                        this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix );
+                        if (name =='obb' )
+                        {
+                            obj.mesh.draw(this.gl.LINE_LOOP);
+                            
+                        }
+                        else if (name == 'pbb' )
+                        {
+    
+                        }
+                        else
+                            obj.mesh.draw(this.gl.TRIANGLES);
+                    }
+                }
                 if(true){
                     this.gl.cullFace(this.gl.FRONT);
                     this.gl.depthMask(false);
@@ -565,38 +633,84 @@ export default class TrackScene extends Scene {
                 for(let name in this.obstacles[i].Objects){
                     if(this.obstacles[i].Objects[name].physics.pos[2]>10)
                         {
-                            this.obstacles[i]=new Obstacle(Math.round(Math.random() * 3+1),-30,this.textures,this.gl);
+                            this.obstacles[i]=new Obstacle(Math.round(Math.random() * 3+1),-30,this.textures,this.gl,this.meshes['obstacle1']);
                             
                         }
-                    if(this.move)
+                     if(this.move)
                         this.obstacles[i].Objects[name].physics.velocity[2]=0.01;
                     else
                         this.obstacles[i].Objects[name].physics.velocity[2]=0;
                      
-                }    
+                }     
             this.obstacles[i].Update(deltaTime);
             for(let name in this.obstacles[i].Objects){
-                this.objects[name+i]=this.obstacles[i].Objects[name];
-                var mt1 = mat4.multiply(mat4.create(),this.objects[name+i].modelMatrix,this.objects[name+i].aabb.t);
-                this.objects['obb'+name+i]=this.objects['obb']
-                this.objects['obb'+name+i].modelMatrix = mt1;
-                this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects[name+i].aabb,
-                 this.objects['obb'+name+i].aabb, this.objects[name+i].modelMatrix,this.objects['obb'+name+i].modelMatrix );
-                 
-            }
-        }
-    }
-    public obstaclecollied(){
+                let program = this.programs['directional']; 
+                program.use(); // Use it
+                program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
+                program.setUniform3f("cam_position", this.camera.position);
+                program.setUniform3f('light.color', vec3.fromValues(0.7,0.7,0.8));
+                program.setUniform3f('light.direction', vec3.normalize(vec3.create(), vec3.fromValues(-1,-1,-1)));
+                
+               
+                    let obj = this.obstacles[i].Objects[name];
 
-    }
-    public deleteobs(){
-        for (let i = 0; i < 3; i++) {
-            for(let name in this.obstacles[i].Objects){
-                delete this.objects[name+i];
-                delete this.objects['obb'+name+i];
+                    // Create model matrix for the object
+                    program.setUniformMatrix4fv("M", false, obj.modelMatrix);
+                    program.setUniformMatrix4fv("M_it", true, mat4.invert(mat4.create(), obj.modelMatrix));
+                    
+                    // Send material properties and bind the textures
+                    program.setUniform3f("material.albedo_tint", obj.material.albedo_tint);
+                    program.setUniform3f("material.specular_tint", obj.material.specular_tint);
+                    program.setUniform3f("material.emissive_tint", obj.material.emissive_tint);
+                    program.setUniform1f("material.roughness_scale", obj.material.roughness_scale);
+
+                    this.gl.activeTexture(this.gl.TEXTURE0);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.albedo);
+                    this.gl.bindSampler(0, this.samplers['regular']);
+                    program.setUniform1i("material.albedo", 0);
+
+                    this.gl.activeTexture(this.gl.TEXTURE1);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.specular);
+                    this.gl.bindSampler(1, this.samplers['regular']);
+                    program.setUniform1i("material.specular", 1);
+
+                    this.gl.activeTexture(this.gl.TEXTURE2);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.roughness);
+                    this.gl.bindSampler(2, this.samplers['regular']);
+                    program.setUniform1i("material.roughness", 2);
+
+                    this.gl.activeTexture(this.gl.TEXTURE3);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.emissive);
+                    this.gl.bindSampler(3, this.samplers['regular']);
+                    program.setUniform1i("material.emissive", 3);
+
+                    this.gl.activeTexture(this.gl.TEXTURE4);
+                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.ambient_occlusion);
+                    this.gl.bindSampler(4, this.samplers['regular']);
+                    program.setUniform1i("material.ambient_occlusion", 4);
+                    
+                    // Draw the object
+                    var mt1 = mat4.multiply(mat4.create(),obj.modelMatrix,obj.aabb.t);
+                    var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+                    this.objects['obb'].modelMatrix = mt1;
+                    this.objects['obb'].mesh.draw(this.gl.LINE_LOOP);
+                    console.log(SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ));
+                    this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix );
+                    if (name =='obb' )
+                    {
+                        obj.mesh.draw(this.gl.LINE_LOOP);
+                        
+                    }
+                    else if (name == 'pbb' )
+                    {
+
+                    }
+                    else
+                        obj.mesh.draw(this.gl.TRIANGLES);
+                }
             }
         }
-    }
+
     public end(): void {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for(let key in this.programs)
