@@ -46,6 +46,7 @@ export default class TrackScene extends Scene {
         "fog",
         "kernel"
     ];
+    doescollied:boolean;
     randoms:number[];
     objects: {[name: string]: Object3D} = {};
     obstacles: {[name: string]: Obstacle} = {};
@@ -97,6 +98,7 @@ export default class TrackScene extends Scene {
     } 
     
     public start(): void {
+        this.doescollied=false;
         this.ingame = false;
         this.gameOver = false;
         this.Punish = 0;
@@ -227,21 +229,21 @@ export default class TrackScene extends Scene {
             aabb : null,
             physics : null
         };
-        this.objects['obstacle1'] = {
-            mesh: this.meshes['obstacle1'],
-            material: {albedo: this.textures['snow.albedo'],
-            albedo_tint: vec3.fromValues(1, 1, 1),
-            specular: this.textures['snow.specular'],
-            specular_tint: vec3.fromValues(1, 1, 1),
-            roughness: this.textures['snow.roughness'],
-            roughness_scale: 1,
-            emissive: this.textures['black'],
-            emissive_tint: vec3.fromValues(1, 1, 1),
-            ambient_occlusion: this.textures['white']},
-            modelMatrix: mat4.create(),
-            aabb : new AABB(this.meshes['obstacle1']),
-            physics : null
-        };
+        // this.objects['obstacle1'] = {
+        //     mesh: this.meshes['obstacle1'],
+        //     material: {albedo: this.textures['snow.albedo'],
+        //     albedo_tint: vec3.fromValues(1, 1, 1),
+        //     specular: this.textures['snow.specular'],
+        //     specular_tint: vec3.fromValues(1, 1, 1),
+        //     roughness: this.textures['snow.roughness'],
+        //     roughness_scale: 1,
+        //     emissive: this.textures['black'],
+        //     emissive_tint: vec3.fromValues(1, 1, 1),
+        //     ambient_occlusion: this.textures['white']},
+        //     modelMatrix: mat4.create(),
+        //     aabb : new AABB(this.meshes['obstacle1']),
+        //     physics : null
+        // };
         //console.log(this.objects['obstacle1'].aabb);
         this.objects['obb'] = {
             mesh: this.meshes['obb'],
@@ -346,8 +348,9 @@ export default class TrackScene extends Scene {
         this.currFrame++;
         ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
         this.controller.update(deltaTime); // Update camera
-        if (SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ) && (this.ingame||this.gameOver) )
-       {
+        //if (SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ) && (this.ingame||this.gameOver) )
+        if ( this.doescollied&& (this.ingame||this.gameOver) )
+        {
             this.gameOver = true;
             this.currentEffect = "kernel";
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -396,11 +399,11 @@ export default class TrackScene extends Scene {
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
             this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, -1, -70), vec3.fromValues(1, 1, 1));
             this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-            this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
-            vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
-            var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
+            // this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
+            // vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
+            // var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
             var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
-            this.objects['obb'].modelMatrix = mt1;
+            // this.objects['obb'].modelMatrix = mt1;
             this.objects['pbb'].modelMatrix = mat4.create();//mat4.fromRotationTranslationScale(mt2,quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0),vec3.create(),vec3.fromValues(1,1,1));
             
 
@@ -545,15 +548,17 @@ export default class TrackScene extends Scene {
         }   
     for (let i = 0; i < 3; i++) {
             this.obstacles[i]=new Obstacle(randoms[i],-10-i*10,this.textures,this.gl);
+            console.log(-10-i*10);
         }
     }
     public updateobstacles(deltaTime:number){
         for (let i = 0; i < 3; i++) {
             
                 for(let name in this.obstacles[i].Objects){
-                    if(this.obstacles[i].Objects[name].physics.pos[2]>3)
+                    if(this.obstacles[i].Objects[name].physics.pos[2]>10)
                         {
                             this.obstacles[i]=new Obstacle(Math.round(Math.random() * 3+1),-30,this.textures,this.gl);
+                            
                         }
                     if(this.move)
                         this.obstacles[i].Objects[name].physics.velocity[2]=0.01;
@@ -564,8 +569,16 @@ export default class TrackScene extends Scene {
             this.obstacles[i].Update(deltaTime);
             for(let name in this.obstacles[i].Objects){
                 this.objects[name+i]=this.obstacles[i].Objects[name];
+                var mt1 = mat4.multiply(mat4.create(),this.objects[name+i].modelMatrix,this.objects[name+i].aabb.t);
+                this.objects['obb'].modelMatrix = mt1;
+                this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects[name+i].aabb,
+                 this.objects['obb'].aabb, this.objects[name+i].modelMatrix,this.objects['obb'].modelMatrix );
+                 
             }
         }
+    }
+    public obstaclecollied(){
+
     }
     public deleteobs(){
         for (let i = 0; i < 3; i++) {
