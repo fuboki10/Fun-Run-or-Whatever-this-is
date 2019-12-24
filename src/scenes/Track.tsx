@@ -10,6 +10,7 @@ import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import {AABB,matbyvec, Collides, SphereCollides} from '../common/CollisionDetector'
 import {Object3D,AmbientLight,DirectionalLight,PointLight,SpotLight,Light,Material} from '../common/Utils'
 import {physics} from '../common/pyhiscs'
+import { Obstacle } from '../common/obstacle';
 
 function triangle(x: number): number {
     let i = Math.floor(x);
@@ -45,6 +46,7 @@ export default class TrackScene extends Scene {
         "fog",
         "kernel"
     ];
+    test:Obstacle;
     randoms:number[];
     objects: {[name: string]: Object3D} = {};
     obstacletime:number;
@@ -335,6 +337,7 @@ export default class TrackScene extends Scene {
 
         this.gl.clearColor(0.1,0.1,0.1,1);
         var a= vec4.fromValues(0,0,0,0);
+        this.test =new Obstacle(1, -15, this.textures,this.gl);
 
     }
     
@@ -411,6 +414,11 @@ export default class TrackScene extends Scene {
                 program.setUniform3f("cam_position", this.camera.position);
                 program.setUniform3f(`light.color`, light.color);
                 program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), light.direction));
+                this.test.Update(deltaTime);
+                this.objects['test1']=this.test.Objects[0];
+                this.objects['test2']=this.test.Objects[1];
+                this.objects['test3']=this.test.Objects[2];
+                
                 for(let name in this.objects)
                 {
                     let obj = this.objects[name];
