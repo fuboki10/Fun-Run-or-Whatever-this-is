@@ -188,9 +188,9 @@ export class Obstacle
     public Update(deltaTime:number)
     {
         if (this.type == 1) {
-            this.Objects[0].physics.move(deltaTime, 5, -5);
-            this.Objects[1].physics.move(deltaTime, 5, -5);
-            this.Objects[2].physics.move(deltaTime, 5, -5);
+            this.Objects[0].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(0,-5));
+            this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(0,-5));
+            this.Objects[2].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(0,-5));
             
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
