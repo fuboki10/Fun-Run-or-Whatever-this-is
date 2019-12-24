@@ -7,14 +7,14 @@ import * as MeshUtils from '../common/mesh-utils'
 
 export class Obstacle
 {
-    Objects: Object3D;
+    Objects:{[name: string]: Object3D} = {};
     type : number;
     constructor(rand:number, zCord:number, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext)
     {
         this.type = rand;
         if(rand == 1)
         {
-            this.Objects=[{
+            this.Objects[0]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -26,11 +26,11 @@ export class Obstacle
                 emissive_tint: vec3.fromValues(1, 1, 1),
                 ambient_occlusion: textures['white']},
                 modelMatrix: mat4.create(),
-                aabb : new AABB(MeshUtils.Cube(gl)),
+                aabb : new AABB(MeshUtils.Cube(gl)),    
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
-            },
-            {
+                vec3.fromValues(0.01, 0, 0), true, vec3.fromValues(0, 0, 0))
+            };
+            this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -44,9 +44,9 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord+1), // we will change velocity later
-                vec3.fromValues(0.0001/3, 0, 0), true, vec3.fromValues(0, 0, 0))
-            },
-            {
+                vec3.fromValues(0.01/3, 0, 0), true, vec3.fromValues(0, 0, 0))
+            }
+            this.Objects[2]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -60,12 +60,12 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord+2), // we will change velocity later
-                vec3.fromValues(0.0001/6, 0, 0), true, vec3.fromValues(0, 0, 0))
-            }];
+                vec3.fromValues(0.01/6, 0, 0), true, vec3.fromValues(0, 0, 0))
+            };
         }
         if (rand == 2)
         {
-            this.Objects=[{
+            this.Objects[0]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -80,8 +80,8 @@ export class Obstacle
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord), // we will change velocity later
                 vec3.fromValues(0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
-            },
-            {
+            };
+            this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -96,11 +96,11 @@ export class Obstacle
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
                 vec3.fromValues(-0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
-            }];
+            };
         }
         if (rand == 3)
         {
-            this.Objects=[{
+            this.Objects[0]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -115,8 +115,8 @@ export class Obstacle
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
                 vec3.fromValues(-0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
-            },
-            {
+            };
+            this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -131,11 +131,11 @@ export class Obstacle
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord+1), // we will change velocity later
                 vec3.fromValues(0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
-            }];
+            };
         }
         if (rand == 4)
         {
-            this.Objects=[{
+            this.Objects[0]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -150,8 +150,8 @@ export class Obstacle
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord), // we will change velocity later
                 vec3.fromValues(0, -0.001, 0), true, vec3.fromValues(0, 0, 0))
-            },
-            {
+            };
+            this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -166,8 +166,8 @@ export class Obstacle
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord+1), // we will change velocity later
                 vec3.fromValues(0, 0.0001, 0), true, vec3.fromValues(0, 0, 0))
-            },
-            {
+            };
+            this.Objects[2]={
                 mesh:MeshUtils.Cube(gl),
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
@@ -182,17 +182,16 @@ export class Obstacle
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord), // we will change velocity later
                 vec3.fromValues(0, -0.0001, 0), true, vec3.fromValues(0, 0, 0))
-            }];
+            };
         }
     }
     public Update(deltaTime:number)
     {
         if (this.type == 1) {
-            this.Objects[0].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(-5,0));   
-            console.log(this.Objects[0].physics.speed)
-            this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(-5,0));
-            this.Objects[2].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(-5,0));
-            
+            this.Objects[0].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));   
+            this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));
+            this.Objects[2].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));
+            console.log(this.Objects[0].physics.pos);
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
             this.Objects[1].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
