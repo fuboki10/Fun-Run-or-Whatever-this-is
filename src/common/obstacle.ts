@@ -1,5 +1,12 @@
 import {Object3D} from '../common/Utils' 
 import { AABB } from './CollisionDetector';
+import { Key } from 'ts-key-enum';
+import { Scene } from '../common/game';
+import ShaderProgram from '../common/shader-program';
+import Mesh from '../common/mesh';
+import * as TextureUtils from '../common/texture-utils';
+import Camera from '../common/camera';
+import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
 import { physics } from './pyhiscs';
 import { vec3, mat4, quat, vec2 } from 'gl-matrix';
 import * as MeshUtils from '../common/mesh-utils'
@@ -9,13 +16,15 @@ export class Obstacle
 {
     Objects:{[name: string]: Object3D} = {};
     type : number;
-    constructor(rand:number, zCord:number, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext)
+    mesh : any ;
+    constructor(rand:number, zCord:number, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext , Mesh : any)
     {
+        this.mesh = Mesh;
         this.type = rand;
         if(rand == 1)
         {
             this.Objects[0]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -31,7 +40,7 @@ export class Obstacle
                 vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -47,7 +56,7 @@ export class Obstacle
                 vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
             }
             this.Objects[2]={
-                mesh:MeshUtils.Cube(gl),    
+                mesh:this.mesh,    
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -66,7 +75,7 @@ export class Obstacle
         if (rand == 2)
         {
             this.Objects[0]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -82,7 +91,7 @@ export class Obstacle
                 vec3.fromValues(-0.001, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
             };
             this.Objects[1]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -101,7 +110,7 @@ export class Obstacle
         if (rand == 3)
         {
             this.Objects[0]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -117,7 +126,7 @@ export class Obstacle
                 vec3.fromValues(-0.01, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
             };
             this.Objects[1]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -136,7 +145,7 @@ export class Obstacle
         if (rand == 4)
         {
             this.Objects[0]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -152,7 +161,7 @@ export class Obstacle
                 vec3.fromValues(0, -0.003, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -168,7 +177,7 @@ export class Obstacle
                 vec3.fromValues(0, 0.003, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[2]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:this.mesh,
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -184,7 +193,6 @@ export class Obstacle
                 vec3.fromValues(0, -0.003, 0), true, vec3.fromValues(0, 0, 0))
             };
         }
-        console.log(this.Objects[0]);
     }
     public Update(deltaTime:number)
     {
@@ -202,7 +210,6 @@ export class Obstacle
         if (this.type == 2) {
             this.Objects[0].physics.move(deltaTime,vec2.fromValues(-0.5,2),vec2.fromValues(-5,-2));
             this.Objects[1].physics.move(deltaTime,vec2.fromValues(5,2),vec2.fromValues(0.5,-2));
-            console.log(this.Objects[0].physics.pos);
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),
             quat.create(),//rotation
             this.Objects[0].physics.pos,//postion

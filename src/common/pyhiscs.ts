@@ -15,8 +15,6 @@ constructor(postion:vec3,speed:vec3,iswave:boolean,acc:vec3){
     this.accelration = vec3.clone(acc);
     this.timedilation = 0.0001;
     this.wave = iswave;
-    console.log(this.pos);
-    console.log(this.velocity);
 }
  public move(deltatime:number,max:vec2,min:vec2) {
     if(this.wave)
@@ -25,7 +23,6 @@ constructor(postion:vec3,speed:vec3,iswave:boolean,acc:vec3){
         // to avoid problems
         this.pos[0]=Math.min(Math.max(min[0], this.pos[0]), max[0]);
         this.pos[1]=Math.min(Math.max(min[1], this.pos[1]), max[1]);
-        console.log(min[0],max[0],this.pos[0]);
         let deltadist=vec3.create();
         let currspeed=vec3.create();
         
@@ -36,7 +33,6 @@ constructor(postion:vec3,speed:vec3,iswave:boolean,acc:vec3){
         if((this.pos[0]<=min[0]||this.pos[1]<=min[1])&&(this.velocity[0]<0||this.velocity[1]<0)){
             vec3.multiply(this.velocity, this.velocity, [-1, -1, -1]); 
          }
-         console.log(this.pos,this.velocity);
  
         vec3.multiply(deltadist,this.velocity,[deltatime,deltatime,deltatime]);
    

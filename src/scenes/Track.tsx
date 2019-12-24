@@ -8,7 +8,7 @@ import Camera from '../common/camera';
 import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
 import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import {AABB,matbyvec, Collides, SphereCollides} from '../common/CollisionDetector';
-import {Object3D,AmbientLight,DirectionalLight,PointLight,SpotLight,Light,Material} from '../common/Utils';
+import {Object3D,} from '../common/Utils';
 import {physics} from '../common/pyhiscs';
 import { Obstacle } from '../common/obstacle';
 
@@ -39,7 +39,6 @@ export default class TrackScene extends Scene {
     gameOver:boolean;
     currentEffect : string;
     timeobsacles:number;
-    light: Light = { type: 'directional', enabled: true, color: vec3.fromValues(0.9,0.9,0.9), direction:vec3.fromValues(-1,-1,-1)};
     static readonly cubemapDirections = ['xneg', 'yneg', 'zneg', 'xpos', 'ypos', 'zpos'];
     frameBuffer: WebGLFramebuffer; // This will hold the frame buffer object
     readonly shaders = [
@@ -112,7 +111,7 @@ export default class TrackScene extends Scene {
         document.addEventListener("keydown", (ev)=>{
             if(this.gameOver)
             {
-                this.game.startScene("Choose Material");
+                //this.game.startScene("Choose Material");
             }
             else
             {
@@ -247,7 +246,17 @@ export default class TrackScene extends Scene {
         //console.log(this.objects['obstacle1'].aabb);
         this.objects['obb'] = {
             mesh: this.meshes['obb'],
-            material: this.game.playerMat,
+            material: {
+                albedo: this.textures['snow.albedo'],
+                albedo_tint: vec3.fromValues(1, 1, 1),
+                specular: this.textures['snow.specular'],
+                specular_tint: vec3.fromValues(1, 1, 1),
+                roughness: this.textures['snow.roughness'],
+                roughness_scale: 1,
+                emissive: this.textures['white'],
+                emissive_tint: vec3.fromValues(1, 1, 1),
+                ambient_occlusion: this.textures['snow.ao']
+            },
             modelMatrix: mat4.create(),
             aabb : new AABB(this.meshes['obb']),
             physics : null
@@ -402,21 +411,20 @@ export default class TrackScene extends Scene {
             // this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
             // vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
             // var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
-            var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+            // var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
             // this.objects['obb'].modelMatrix = mt1;
             this.objects['pbb'].modelMatrix = mat4.create();//mat4.fromRotationTranslationScale(mt2,quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0),vec3.create(),vec3.fromValues(1,1,1));
             
 
            
-                let light = this.light;
+
                 this.gl.disable(this.gl.BLEND);          
                 let program = this.programs['directional']; 
                 program.use(); // Use it
-                // Send the VP and camera position
                 program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
                 program.setUniform3f("cam_position", this.camera.position);
-                program.setUniform3f(`light.color`, light.color);
-                program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), light.direction));
+                program.setUniform3f(`light.color`, vec3.fromValues(0.7,0.7,0.8));
+                program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), vec3.fromValues(-1,-1,-1)));
                 this.updateobstacles(deltaTime);      
                 for(let name in this.objects)
                 {
@@ -460,6 +468,7 @@ export default class TrackScene extends Scene {
                     // Draw the object
                     if (name == 'obb' )
                     {
+
                         obj.mesh.draw(this.gl.LINE_LOOP);
                     }
                     else if (name == 'pbb' )
@@ -547,8 +556,7 @@ export default class TrackScene extends Scene {
             randoms.push(Math.round(Math.random() * 3+1));
         }   
     for (let i = 0; i < 3; i++) {
-            this.obstacles[i]=new Obstacle(randoms[i],-10-i*10,this.textures,this.gl);
-            console.log(-10-i*10);
+            this.obstacles[i]=new Obstacle(randoms[i],-10-i*10,this.textures,this.gl,this.meshes['obstacle1']);
         }
     }
     public updateobstacles(deltaTime:number){
