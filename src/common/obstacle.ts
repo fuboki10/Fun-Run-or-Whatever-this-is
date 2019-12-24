@@ -184,6 +184,7 @@ export class Obstacle
                 vec3.fromValues(0, -0.003, 0), true, vec3.fromValues(0, 0, 0))
             };
         }
+        console.log(this.Objects[0]);
     }
     public Update(deltaTime:number)
     {
