@@ -630,71 +630,7 @@ export default class TrackScene extends Scene {
                      
                 }     
             this.obstacles[i].Update(deltaTime);
-            for(let name in this.obstacles[i].Objects){
-                let program = this.programs['directional']; 
-                program.use(); // Use it
-                program.setUniformMatrix4fv("VP", false, this.camera.ViewProjectionMatrix);
-                program.setUniform3f("cam_position", this.camera.position);
-                program.setUniform3f('light.color', vec3.fromValues(0.7,0.7,0.8));
-                program.setUniform3f('light.direction', vec3.normalize(vec3.create(), vec3.fromValues(-1,-1,-1)));
-                
-               
-                    let obj = this.obstacles[i].Objects[name];
-
-                    // Create model matrix for the object
-                    program.setUniformMatrix4fv("M", false, obj.modelMatrix);
-                    program.setUniformMatrix4fv("M_it", true, mat4.invert(mat4.create(), obj.modelMatrix));
-                    
-                    // Send material properties and bind the textures
-                    program.setUniform3f("material.albedo_tint", obj.material.albedo_tint);
-                    program.setUniform3f("material.specular_tint", obj.material.specular_tint);
-                    program.setUniform3f("material.emissive_tint", obj.material.emissive_tint);
-                    program.setUniform1f("material.roughness_scale", obj.material.roughness_scale);
-
-                    this.gl.activeTexture(this.gl.TEXTURE0);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.albedo);
-                    this.gl.bindSampler(0, this.samplers['regular']);
-                    program.setUniform1i("material.albedo", 0);
-
-                    this.gl.activeTexture(this.gl.TEXTURE1);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.specular);
-                    this.gl.bindSampler(1, this.samplers['regular']);
-                    program.setUniform1i("material.specular", 1);
-
-                    this.gl.activeTexture(this.gl.TEXTURE2);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.roughness);
-                    this.gl.bindSampler(2, this.samplers['regular']);
-                    program.setUniform1i("material.roughness", 2);
-
-                    this.gl.activeTexture(this.gl.TEXTURE3);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.emissive);
-                    this.gl.bindSampler(3, this.samplers['regular']);
-                    program.setUniform1i("material.emissive", 3);
-
-                    this.gl.activeTexture(this.gl.TEXTURE4);
-                    this.gl.bindTexture(this.gl.TEXTURE_2D, obj.material.ambient_occlusion);
-                    this.gl.bindSampler(4, this.samplers['regular']);
-                    program.setUniform1i("material.ambient_occlusion", 4);
-                    
-                    // Draw the object
-                   var mt1 = mat4.multiply(mat4.create(),obj.modelMatrix,obj.aabb.t);
-                    //var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
-                    this.objects['obb'].modelMatrix = mt1;
-                   this.objects['obb'].mesh.draw(this.gl.LINE_LOOP);
-                    console.log(SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ));
-                    this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix );
-                    if (name =='obb' )
-                    {
-                        obj.mesh.draw(this.gl.LINE_LOOP);
-                        
-                    }
-                    else if (name == 'pbb' )
-                    {
-
-                    }
-                    else
-                        obj.mesh.draw(this.gl.TRIANGLES);
-                }
+           
             }
         }
 
