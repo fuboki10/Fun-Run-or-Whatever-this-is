@@ -7,7 +7,7 @@ import * as MeshUtils from '../common/mesh-utils'
 
 export class Obstacle
 {
-    Objects: Object3D[];
+    Objects: Object3D;
     type : number;
     constructor(rand:number, zCord:number, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext)
     {
