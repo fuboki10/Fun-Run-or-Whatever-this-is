@@ -8,7 +8,7 @@ import Camera from '../common/camera';
 import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
 import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import {AABB,matbyvec, Collides, SphereCollides} from '../common/CollisionDetector';
-import {Object3D,} from '../common/Utils';
+import {Object3D,Material} from '../common/Utils';
 import {physics} from '../common/pyhiscs';
 import { Obstacle } from '../common/obstacle';
 
@@ -221,14 +221,7 @@ export default class TrackScene extends Scene {
             aabb : new AABB(this.meshes['player']),
             physics : null
         };
-        this.objects['pbb'] = {
-            mesh: this.meshes['pbb'],
-            material: this.game.playerMat,
-            modelMatrix: mat4.create(),
-            aabb : null,
-            physics : null
-        };
-        this.objects['obstacle1'] = {
+        /*this.objects['obstacle1'] = {
             mesh: this.meshes['obstacle1'],
             material: {albedo: this.textures['snow.albedo'],
             albedo_tint: vec3.fromValues(1, 1, 1),
@@ -243,7 +236,7 @@ export default class TrackScene extends Scene {
             aabb : new AABB(this.meshes['obstacle1']),
             physics : null
         };
-        console.log(this.objects['obstacle1'].aabb);
+        console.log(this.objects['obstacle1'].aabb);*/
         this.objects['obb'] = {
             mesh: this.meshes['obb'],
             material: {
@@ -409,14 +402,12 @@ export default class TrackScene extends Scene {
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT); // Clear color and depth
             this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, -1, -70), vec3.fromValues(1, 1, 1));
             this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
-            this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
+            //this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
             vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
-            var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
-            var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
-            this.objects['obb'].modelMatrix = mt1;
-            this.objects['pbb'].modelMatrix = mat4.create();//mat4.fromRotationTranslationScale(mt2,quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0),vec3.create(),vec3.fromValues(1,1,1));
-            
-
+            //var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
+            //var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+            //this.objects['obb'].modelMatrix = mt1;
+           
            
 
                 this.gl.disable(this.gl.BLEND);          
@@ -472,10 +463,6 @@ export default class TrackScene extends Scene {
                     {
                         obj.mesh.draw(this.gl.LINE_LOOP);
                         
-                    }
-                    else if (name == 'pbb' )
-                    {
-
                     }
                     else
                         obj.mesh.draw(this.gl.TRIANGLES);
@@ -690,10 +677,10 @@ export default class TrackScene extends Scene {
                     program.setUniform1i("material.ambient_occlusion", 4);
                     
                     // Draw the object
-                    var mt1 = mat4.multiply(mat4.create(),obj.modelMatrix,obj.aabb.t);
-                    var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
+                   var mt1 = mat4.multiply(mat4.create(),obj.modelMatrix,obj.aabb.t);
+                    //var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
                     this.objects['obb'].modelMatrix = mt1;
-                    this.objects['obb'].mesh.draw(this.gl.LINE_LOOP);
+                   this.objects['obb'].mesh.draw(this.gl.LINE_LOOP);
                     console.log(SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ));
                     this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix );
                     if (name =='obb' )
