@@ -79,7 +79,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord), // we will change velocity later
-                vec3.fromValues(-0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(-0.001, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
             };
             this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
@@ -95,7 +95,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.001, 0, 0), true, vec3.fromValues(-0.0001, 0, 0))
             };
         }
         if (rand == 3)
@@ -114,7 +114,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(-0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(-0.01, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
             };
             this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
@@ -130,7 +130,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord+1), // we will change velocity later
-                vec3.fromValues(0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.01, 0, 0), true, vec3.fromValues(-0.0001, 0, 0))
             };
         }
         if (rand == 4)
@@ -149,7 +149,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord), // we will change velocity later
-                vec3.fromValues(0, -0.001, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0, -0.003, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
@@ -165,7 +165,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord+2), // we will change velocity later
-                vec3.fromValues(0, 0.001, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0, 0.003, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[2]={
                 mesh:MeshUtils.Cube(gl),
@@ -181,7 +181,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord+4), // we will change velocity later
-                vec3.fromValues(0, -0.001, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0, -0.003, 0), true, vec3.fromValues(0, 0, 0))
             };
         }
         console.log(this.Objects[0]);
@@ -215,9 +215,9 @@ export class Obstacle
             this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));
             
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
-            this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
+            this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 0.5));
             this.Objects[1].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
-            this.Objects[1].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
+            this.Objects[1].physics.pos, vec3.fromValues(1.5, 0.5, 0.5));
 
         }
         if (this.type == 4) {

@@ -337,7 +337,12 @@ export default class TrackScene extends Scene {
 
         this.gl.clearColor(0.1,0.1,0.1,1);
         var a= vec4.fromValues(0,0,0,0);
+<<<<<<< HEAD
         this.initobstacles();
+=======
+        this.test =new Obstacle(4, -15, this.textures,this.gl);
+
+>>>>>>> 7f8be7dc84fe12c53359d7af857b91f07beccf94
     }
     
     public draw(deltaTime: number): void
