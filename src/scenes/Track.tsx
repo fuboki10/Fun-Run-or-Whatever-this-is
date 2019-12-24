@@ -337,12 +337,8 @@ export default class TrackScene extends Scene {
 
         this.gl.clearColor(0.1,0.1,0.1,1);
         var a= vec4.fromValues(0,0,0,0);
-<<<<<<< HEAD
         this.initobstacles();
-=======
-        this.test =new Obstacle(4, -15, this.textures,this.gl);
 
->>>>>>> 7f8be7dc84fe12c53359d7af857b91f07beccf94
     }
     
     public draw(deltaTime: number): void
@@ -553,6 +549,18 @@ export default class TrackScene extends Scene {
     }
     public updateobstacles(deltaTime:number){
         for (let i = 0; i < 3; i++) {
+            
+                for(let name in this.obstacles[i].Objects){
+                    if(this.obstacles[i].Objects[name].physics.pos[2]>3)
+                        {
+                            this.obstacles[i]=new Obstacle(Math.round(Math.random() * 3+1),-30,this.textures,this.gl);
+                        }
+                    if(this.move)
+                        this.obstacles[i].Objects[name].physics.velocity[2]=0.01;
+                    else
+                        this.obstacles[i].Objects[name].physics.velocity[2]=0;
+                     
+                }    
             this.obstacles[i].Update(deltaTime);
             for(let name in this.obstacles[i].Objects){
                 this.objects[name+i]=this.obstacles[i].Objects[name];
