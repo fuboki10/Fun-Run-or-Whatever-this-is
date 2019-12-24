@@ -9,7 +9,7 @@ export class Obstacle
 {
     Objects: Object3D[];
     type : number;
-    constructor(rand:number, zCord:number, velocity:vec3, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext)
+    constructor(rand:number, zCord:number, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext)
     {
         this.type = rand;
         if(rand == 1)
