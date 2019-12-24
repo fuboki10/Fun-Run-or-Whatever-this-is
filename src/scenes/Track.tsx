@@ -578,9 +578,10 @@ export default class TrackScene extends Scene {
             for(let name in this.obstacles[i].Objects){
                 this.objects[name+i]=this.obstacles[i].Objects[name];
                 var mt1 = mat4.multiply(mat4.create(),this.objects[name+i].modelMatrix,this.objects[name+i].aabb.t);
-                this.objects['obb'].modelMatrix = mt1;
+                this.objects['obb'+name+i]=this.objects['obb']
+                this.objects['obb'+name+i].modelMatrix = mt1;
                 this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects[name+i].aabb,
-                 this.objects['obb'].aabb, this.objects[name+i].modelMatrix,this.objects['obb'].modelMatrix );
+                 this.objects['obb'+name+i].aabb, this.objects[name+i].modelMatrix,this.objects['obb'+name+i].modelMatrix );
                  
             }
         }
@@ -592,6 +593,7 @@ export default class TrackScene extends Scene {
         for (let i = 0; i < 3; i++) {
             for(let name in this.obstacles[i].Objects){
                 delete this.objects[name+i];
+                delete this.objects['obb'+name+i];
             }
         }
     }
