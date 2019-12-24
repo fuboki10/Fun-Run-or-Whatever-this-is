@@ -28,7 +28,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),    
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(0.01, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
@@ -44,7 +44,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord+1), // we will change velocity later
-                vec3.fromValues(0.01/3, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.005/3, 0, 0), true, vec3.fromValues(0, 0, 0))
             }
             this.Objects[2]={
                 mesh:MeshUtils.Cube(gl),
@@ -60,7 +60,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord+2), // we will change velocity later
-                vec3.fromValues(0.01/6, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.005/6, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
         }
         if (rand == 2)
@@ -79,7 +79,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord), // we will change velocity later
-                vec3.fromValues(0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(-0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
@@ -95,7 +95,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(-0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
         }
         if (rand == 3)
@@ -114,7 +114,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(-0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(-0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
                 mesh:MeshUtils.Cube(gl),
@@ -130,7 +130,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord+1), // we will change velocity later
-                vec3.fromValues(0.0001, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.001, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
         }
         if (rand == 4)
@@ -164,8 +164,8 @@ export class Obstacle
                 ambient_occlusion: textures['white']},
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
-                physics:new physics(vec3.fromValues(0, 0, zCord+1), // we will change velocity later
-                vec3.fromValues(0, 0.0001, 0), true, vec3.fromValues(0, 0, 0))
+                physics:new physics(vec3.fromValues(0, 0, zCord+2), // we will change velocity later
+                vec3.fromValues(0, 0.001, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[2]={
                 mesh:MeshUtils.Cube(gl),
@@ -180,8 +180,8 @@ export class Obstacle
                 ambient_occlusion: textures['white']},
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
-                physics:new physics(vec3.fromValues(0, 0, zCord), // we will change velocity later
-                vec3.fromValues(0, -0.0001, 0), true, vec3.fromValues(0, 0, 0))
+                physics:new physics(vec3.fromValues(0, 0, zCord+4), // we will change velocity later
+                vec3.fromValues(0, -0.001, 0), true, vec3.fromValues(0, 0, 0))
             };
         }
     }
@@ -191,7 +191,6 @@ export class Obstacle
             this.Objects[0].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));   
             this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));
             this.Objects[2].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));
-            console.log(this.Objects[0].physics.pos);
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
             this.Objects[1].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
@@ -200,9 +199,9 @@ export class Obstacle
             this.Objects[2].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
         }
         if (this.type == 2) {
-            this.Objects[0].physics.move(deltaTime/1000,vec2.fromValues(-0.5,0),vec2.fromValues(-5,0));
-            this.Objects[1].physics.move(deltaTime/1000,vec2.fromValues(5,0),vec2.fromValues(0.5,0));
-            
+            this.Objects[0].physics.move(deltaTime,vec2.fromValues(-0.5,2),vec2.fromValues(-5,-2));
+            this.Objects[1].physics.move(deltaTime,vec2.fromValues(5,2),vec2.fromValues(0.5,-2));
+            console.log(this.Objects[0].physics.pos);
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),
             quat.create(),//rotation
             this.Objects[0].physics.pos,//postion
@@ -211,21 +210,20 @@ export class Obstacle
             this.Objects[1].physics.pos,vec3.fromValues(0.5,2,3));
         }
         if (this.type == 3) {
-            this.Objects[0].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(-5,0));
-            this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(-5,0));
+            this.Objects[0].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));
+            this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,2), vec2.fromValues(-5,-2));
             
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
             this.Objects[1].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[1].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
-            this.Objects[2].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
-            this.Objects[2].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
+
         }
         if (this.type == 4) {
-            this.Objects[0].physics.move(deltaTime, vec2.fromValues(0,5), vec2.fromValues(0,-5));
-            this.Objects[1].physics.move(deltaTime, vec2.fromValues(0,5), vec2.fromValues(0,-5));
-            this.Objects[2].physics.move(deltaTime, vec2.fromValues(0,5), vec2.fromValues(0,-5));
-            
+            this.Objects[0].physics.move(deltaTime, vec2.fromValues(1,5), vec2.fromValues(-1,0));
+            this.Objects[1].physics.move(deltaTime, vec2.fromValues(1,2), vec2.fromValues(-1,-3));
+            this.Objects[2].physics.move(deltaTime, vec2.fromValues(1,5), vec2.fromValues(-1,0));
+            //console.log(this.Objects[1].physics.pos);
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
             this.Objects[1].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),

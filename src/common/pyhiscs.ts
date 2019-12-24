@@ -25,16 +25,21 @@ constructor(postion:vec3,speed:vec3,iswave:boolean,acc:vec3){
         // to avoid problems
         this.pos[0]=Math.min(Math.max(min[0], this.pos[0]), max[0]);
         this.pos[1]=Math.min(Math.max(min[1], this.pos[1]), max[1]);
+        console.log(min[0],max[0],this.pos[0]);
         let deltadist=vec3.create();
         let currspeed=vec3.create();
-        if((this.pos[0]>=max[0]||this.pos[1]>=max[1])&&this.velocity[0]>0){
+        
+        if((this.pos[0]>=max[0]||this.pos[1]>=max[1])&&(this.velocity[0]>0||this.velocity[1]>0)){
             vec3.multiply(this.velocity, this.velocity, [-1, -1, -1]);
 
         }
-        if((this.pos[0]<=min[0]||this.pos[1]<=min[1])&&this.velocity[0]<0){
+        if((this.pos[0]<=min[0]||this.pos[1]<=min[1])&&(this.velocity[0]<0||this.velocity[1]<0)){
             vec3.multiply(this.velocity, this.velocity, [-1, -1, -1]); 
          }
+         console.log(this.pos,this.velocity);
+ 
         vec3.multiply(deltadist,this.velocity,[deltatime,deltatime,deltatime]);
+   
         vec3.add(this.pos,deltadist,this.pos);
     }
     else {
