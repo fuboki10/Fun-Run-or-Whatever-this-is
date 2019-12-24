@@ -7,9 +7,9 @@ import * as TextureUtils from '../common/texture-utils';
 import Camera from '../common/camera';
 import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
 import { vec3, mat4, quat, vec4 } from 'gl-matrix';
-import {AABB,matbyvec, Collides, SphereCollides} from '../common/CollisionDetector'
-import {Object3D,AmbientLight,DirectionalLight,PointLight,SpotLight,Light,Material} from '../common/Utils'
-import {physics} from '../common/pyhiscs'
+import {AABB,matbyvec, Collides, SphereCollides} from '../common/CollisionDetector';
+import {Object3D,AmbientLight,DirectionalLight,PointLight,SpotLight,Light,Material} from '../common/Utils';
+import {physics} from '../common/pyhiscs';
 import { Obstacle } from '../common/obstacle';
 
 function triangle(x: number): number {
@@ -46,9 +46,9 @@ export default class TrackScene extends Scene {
         "fog",
         "kernel"
     ];
-    test:Obstacle;
     randoms:number[];
     objects: {[name: string]: Object3D} = {};
+    obstacles: {[name: string]: Obstacle} = {};
     obstacletime:number;
     public load(): void {
         // All the lights will use the same vertex shader combined with different fragment shaders
@@ -337,8 +337,7 @@ export default class TrackScene extends Scene {
 
         this.gl.clearColor(0.1,0.1,0.1,1);
         var a= vec4.fromValues(0,0,0,0);
-        this.test =new Obstacle(1, -15, this.textures,this.gl);
-
+        this.initobstacles();
     }
     
     public draw(deltaTime: number): void
@@ -414,11 +413,7 @@ export default class TrackScene extends Scene {
                 program.setUniform3f("cam_position", this.camera.position);
                 program.setUniform3f(`light.color`, light.color);
                 program.setUniform3f(`light.direction`, vec3.normalize(vec3.create(), light.direction));
-                this.test.Update(deltaTime);
-                this.objects['test1']=this.test.Objects[0];
-                this.objects['test2']=this.test.Objects[1];
-                this.objects['test3']=this.test.Objects[2];
-                
+                this.updateobstacles(deltaTime);      
                 for(let name in this.objects)
                 {
                     let obj = this.objects[name];
@@ -470,7 +465,8 @@ export default class TrackScene extends Scene {
                     else
                         obj.mesh.draw(this.gl.TRIANGLES);
                 } 
-                
+                this.deleteobs();
+                    
                 if(true){
                     this.gl.cullFace(this.gl.FRONT);
                     this.gl.depthMask(false);
@@ -541,7 +537,30 @@ export default class TrackScene extends Scene {
         }
         
     }
-    
+    public initobstacles(){
+        var randoms= [];
+        for (var i=0; i<3; i++) {
+            randoms.push(Math.round(Math.random() * 3+1));
+        }   
+    for (let i = 0; i < 3; i++) {
+            this.obstacles[i]=new Obstacle(randoms[i],-10-i*10,this.textures,this.gl);
+        }
+    }
+    public updateobstacles(deltaTime:number){
+        for (let i = 0; i < 3; i++) {
+            this.obstacles[i].Update(deltaTime);
+            for(let name in this.obstacles[i].Objects){
+                this.objects[name+i]=this.obstacles[i].Objects[name];
+            }
+        }
+    }
+    public deleteobs(){
+        for (let i = 0; i < 3; i++) {
+            for(let name in this.obstacles[i].Objects){
+                delete this.objects[name+i];
+            }
+        }
+    }
     public end(): void {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         for(let key in this.programs)
