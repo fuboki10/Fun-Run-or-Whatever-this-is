@@ -27,7 +27,11 @@ export class Obstacle
                 ambient_occlusion: textures['white']},
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),    
+<<<<<<< HEAD
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
+=======
+                physics:new physics(vec3.fromValues(-4, 0, zCord), // we will change velocity later
+>>>>>>> 2807bbc222900ff0aa1e4ac0b4b6a45da03c6f64
                 vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
@@ -43,11 +47,16 @@ export class Obstacle
                 ambient_occlusion: textures['white']},
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
+<<<<<<< HEAD
                 physics:new physics(vec3.fromValues(5, 0, zCord+1), // we will change velocity later
                 vec3.fromValues(0.005/3, 0, 0), true, vec3.fromValues(0, 0, 0))
+=======
+                physics:new physics(vec3.fromValues(-3, 0, zCord+1), // we will change velocity later
+                vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
+>>>>>>> 2807bbc222900ff0aa1e4ac0b4b6a45da03c6f64
             }
             this.Objects[2]={
-                mesh:MeshUtils.Cube(gl),
+                mesh:MeshUtils.Cube(gl),    
                 material: {albedo: textures['snow.albedo'],
                 albedo_tint: vec3.fromValues(1, 1, 1),
                 specular: textures['snow.specular'],
@@ -59,8 +68,13 @@ export class Obstacle
                 ambient_occlusion: textures['white']},
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
+<<<<<<< HEAD
                 physics:new physics(vec3.fromValues(5, 0, zCord+2), // we will change velocity later
                 vec3.fromValues(0.005/6, 0, 0), true, vec3.fromValues(0, 0, 0))
+=======
+                physics:new physics(vec3.fromValues(-2, 0, zCord+2), // we will change velocity later
+                vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
+>>>>>>> 2807bbc222900ff0aa1e4ac0b4b6a45da03c6f64
             };
         }
         if (rand == 2)
