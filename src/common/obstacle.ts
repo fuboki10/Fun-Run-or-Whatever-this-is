@@ -1,7 +1,7 @@
 import {Object3D} from '../common/Utils' 
 import { AABB } from './CollisionDetector';
 import { physics } from './pyhiscs';
-import { vec3, mat4, quat } from 'gl-matrix';
+import { vec3, mat4, quat, vec2 } from 'gl-matrix';
 import * as MeshUtils from '../common/mesh-utils'
 
 
@@ -200,8 +200,8 @@ export class Obstacle
             this.Objects[2].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
         }
         if (this.type == 2) {
-            this.Objects[0].physics.move(deltaTime/1000,-0.5,-5);
-            this.Objects[1].physics.move(deltaTime/1000,5,0.5);
+            this.Objects[0].physics.move(deltaTime/1000,vec2.fromValues(-0.5,0),vec2.fromValues(-5,0));
+            this.Objects[1].physics.move(deltaTime/1000,vec2.fromValues(5,0),vec2.fromValues(0.5,0));
             
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),
             quat.create(),//rotation
@@ -211,9 +211,8 @@ export class Obstacle
             this.Objects[1].physics.pos,vec3.fromValues(0.5,2,3));
         }
         if (this.type == 3) {
-            this.Objects[0].physics.move(deltaTime, 5, -5);
-            this.Objects[1].physics.move(deltaTime, 5, -5);
-            this.Objects[2].physics.move(deltaTime, 5, -5);
+            this.Objects[0].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(-5,0));
+            this.Objects[1].physics.move(deltaTime, vec2.fromValues(5,0), vec2.fromValues(-5,0));
             
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
@@ -223,9 +222,9 @@ export class Obstacle
             this.Objects[2].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
         }
         if (this.type == 4) {
-            this.Objects[0].physics.move(deltaTime, 5, -5);
-            this.Objects[1].physics.move(deltaTime, 5, -5);
-            this.Objects[2].physics.move(deltaTime, 5, -5);
+            this.Objects[0].physics.move(deltaTime, vec2.fromValues(0,5), vec2.fromValues(0,-5));
+            this.Objects[1].physics.move(deltaTime, vec2.fromValues(0,5), vec2.fromValues(0,-5));
+            this.Objects[2].physics.move(deltaTime, vec2.fromValues(0,5), vec2.fromValues(0,-5));
             
             this.Objects[0].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, 0, 0),
             this.Objects[0].physics.pos, vec3.fromValues(1.5, 0.5, 1.5));
