@@ -337,7 +337,7 @@ export default class TrackScene extends Scene {
 
         this.gl.clearColor(0.1,0.1,0.1,1);
         var a= vec4.fromValues(0,0,0,0);
-        this.test =new Obstacle(1, -15, this.textures,this.gl);
+        this.test =new Obstacle(4, -15, this.textures,this.gl);
 
     }
     
