@@ -8,41 +8,13 @@ import Camera from '../common/camera';
 import FlyCameraController from '../common/camera-controllers/fly-camera-controller';
 import { vec3, mat4, quat, vec4 } from 'gl-matrix';
 import {AABB,matbyvec, Collides, SphereCollides} from '../common/CollisionDetector'
+import {Object3D,AmbientLight,DirectionalLight,PointLight,SpotLight,Light,Material} from '../common/Utils'
+import {physics} from '../common/pyhiscs'
 
 function triangle(x: number): number {
     let i = Math.floor(x);
     return (i%2==0)?(x-i):(1+i-x);
 }
-
-interface DirectionalLight {
-    type: 'directional',
-    enabled: boolean,
-    color: vec3,
-    direction: vec3
-};
-
-
-type Light = DirectionalLight ;
-
-interface Material {
-    albedo: WebGLTexture,
-    albedo_tint: vec3,
-    specular: WebGLTexture,
-    specular_tint: vec3
-    roughness: WebGLTexture,
-    roughness_scale: number,
-    ambient_occlusion: WebGLTexture,
-    emissive: WebGLTexture,
-    emissive_tint: vec3
-};
-
-// This will represent an object in 3D space
-interface Object3D {
-    mesh: Mesh,
-    material: Material,
-    modelMatrix: mat4,
-    aabb : AABB,
-};
 
 
 const canvas: HTMLCanvasElement = document.querySelector("#text");
@@ -235,20 +207,23 @@ export default class TrackScene extends Scene {
                 ambient_occlusion: this.textures['ground.ao']
             },
             modelMatrix: mat4.create(),
-            aabb : null
+            aabb : null,
+            physics:null
         };
 
         this.objects['player'] = {
             mesh: this.meshes['player'],
             material: this.game.playerMat,
             modelMatrix: mat4.create(),
-            aabb : new AABB(this.meshes['player'])
+            aabb : new AABB(this.meshes['player']),
+            physics : null
         };
         this.objects['pbb'] = {
             mesh: this.meshes['pbb'],
             material: this.game.playerMat,
             modelMatrix: mat4.create(),
-            aabb : null
+            aabb : null,
+            physics : null
         };
         this.objects['obstacle1'] = {
             mesh: this.meshes['obstacle1'],
@@ -262,14 +237,16 @@ export default class TrackScene extends Scene {
             emissive_tint: vec3.fromValues(1, 1, 1),
             ambient_occlusion: this.textures['white']},
             modelMatrix: mat4.create(),
-            aabb : new AABB(this.meshes['obstacle1'])
+            aabb : new AABB(this.meshes['obstacle1']),
+            physics : null
         };
         //console.log(this.objects['obstacle1'].aabb);
         this.objects['obb'] = {
             mesh: this.meshes['obb'],
             material: this.game.playerMat,
             modelMatrix: mat4.create(),
-            aabb : new AABB(this.meshes['obb'])
+            aabb : new AABB(this.meshes['obb']),
+            physics : null
         };
 
         const target_directions = [
