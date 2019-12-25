@@ -17,7 +17,7 @@ export class Obstacle
     Objects:{[name: string]: Object3D} = {};
     type : number;
     mesh : any ;
-    constructor(rand:number, zCord:number, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext , Mesh : any)
+    constructor(rand:number, zCord:number, textures: {[name:string] : WebGLTexture},gl:WebGL2RenderingContext , Mesh : any,speed:number)
     {
         this.mesh = Mesh;
         this.type = rand;
@@ -37,7 +37,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),    
                 physics:new physics(vec3.fromValues(-4, 0, zCord), // we will change velocity later
-                vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.005*speed, 0, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
                 mesh:this.mesh,
@@ -53,7 +53,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-3, 0, zCord+1), // we will change velocity later
-                vec3.fromValues(0.005, 0, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0.005*speed, 0, 0), true, vec3.fromValues(0, 0, 0))
             }
             // this.Objects[2]={
             //     mesh:this.mesh,    
@@ -88,7 +88,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord), // we will change velocity later
-                vec3.fromValues(-0.001, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
+                vec3.fromValues(-0.001*speed, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
             };
             this.Objects[1]={
                 mesh:this.mesh,
@@ -104,7 +104,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(0.001, 0, 0), true, vec3.fromValues(-0.0001, 0, 0))
+                vec3.fromValues(0.001*speed, 0, 0), true, vec3.fromValues(-0.0001, 0, 0))
             };
         }
         if (rand == 3)
@@ -123,7 +123,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(5, 0, zCord), // we will change velocity later
-                vec3.fromValues(-0.01, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
+                vec3.fromValues(-0.01*speed, 0, 0), true, vec3.fromValues(0.0001, 0, 0))
             };
             this.Objects[1]={
                 mesh:this.mesh,
@@ -139,7 +139,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(-5, 0, zCord+1), // we will change velocity later
-                vec3.fromValues(0.01, 0, 0), true, vec3.fromValues(-0.0001, 0, 0))
+                vec3.fromValues(0.01*speed, 0, 0), true, vec3.fromValues(-0.0001, 0, 0))
             };
         }
         if (rand == 4)
@@ -158,7 +158,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord), // we will change velocity later
-                vec3.fromValues(0, -0.003, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0, -0.003*speed, 0), true, vec3.fromValues(0, 0, 0))
             };
             this.Objects[1]={
                 mesh:this.mesh,
@@ -174,7 +174,7 @@ export class Obstacle
                 modelMatrix: mat4.create(),
                 aabb : new AABB(MeshUtils.Cube(gl)),
                 physics:new physics(vec3.fromValues(0, 0, zCord+2), // we will change velocity later
-                vec3.fromValues(0, 0.003, 0), true, vec3.fromValues(0, 0, 0))
+                vec3.fromValues(0, 0.003*speed, 0), true, vec3.fromValues(0, 0, 0))
             };
             // this.Objects[2]={
             //     mesh:this.mesh,

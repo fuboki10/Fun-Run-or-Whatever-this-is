@@ -12,6 +12,8 @@ import {Object3D,Material} from '../common/Utils';
 import {physics} from '../common/pyhiscs';
 import { Obstacle } from '../common/obstacle';
 
+
+
 function triangle(x: number): number {
     let i = Math.floor(x);
     return (i%2==0)?(x-i):(1+i-x);
@@ -21,7 +23,12 @@ function triangle(x: number): number {
 const canvas: HTMLCanvasElement = document.querySelector("#text");
 const ctx = canvas.getContext("2d");
 
-
+interface Paramters {
+    speed: number, // the radius of the object
+    zspeed: number, // How far is the object's center from its parent's center
+    scoreinc: number, // How fast it rotates (radians/ms) around the center of its parent
+    scoredec: number, // How fast it rotates (radians/ms) around its center
+};
 export default class TrackScene extends Scene {
     programs: {[name: string]: ShaderProgram} = {};
     camera: Camera;
@@ -50,9 +57,14 @@ export default class TrackScene extends Scene {
     objects: {[name: string]: Object3D} = {};
     obstacles: {[name: string]: Obstacle} = {};
     obstacletime:number;
+    debug: boolean;
+    para: {[name:string]:Paramters};
     public load(): void {
+        
         // All the lights will use the same vertex shader combined with different fragment shaders
+    
         this.game.loader.load({
+            ["para"]:{url:'data/para.json', type:'json'},
             ["mrt.vert"]: { url: 'shaders/mrt.vert', type: 'text' },
             ["mrt.frag"]: { url: 'shaders/mrt.frag', type: 'text' },
             ["light.vert"]:{url:'shaders/phong/textured-materials/light.vert', type:'text'},
@@ -97,6 +109,9 @@ export default class TrackScene extends Scene {
     } 
     
     public start(): void {
+        this.para = this.game.loader.resources["para"];
+        console.log(this.para.system.speed,1);
+        this.debug = false;
         this.doescollied=false;
         this.ingame = false;
         this.gameOver = false;
@@ -109,14 +124,19 @@ export default class TrackScene extends Scene {
         this.time = 0;
         this.obstacletime=0;
         document.addEventListener("keydown", (ev)=>{
+            if(this.game.currentScene == this.game.scenes["Track"])
+            {
+
+            
             if(this.gameOver)
             {
-                //this.game.startScene("Choose Material");
+                this.game.startScene("Choose Material");
             }
             else
             {
 
-            
+            if(!this.doescollied)
+            {
             switch(ev.key){
                 case Key.Enter:
                     this.move = true;
@@ -124,9 +144,13 @@ export default class TrackScene extends Scene {
                 case ' ':
                     ev.preventDefault();
             }
+        }
             }
-        })
+        }
+    })
         document.addEventListener("keyup", (ev)=>{
+            if(this.game.currentScene == this.game.scenes["Track"])
+            {
             switch(ev.key){
                 case Key.Enter:
                     this.move = false;
@@ -134,6 +158,7 @@ export default class TrackScene extends Scene {
                 case ' ':
                     ev.preventDefault();
             }
+        }
         })
         this.programs["3d"] = new ShaderProgram(this.gl);
         this.programs["3d"].attach(this.game.loader.resources["mrt.vert"], this.gl.VERTEX_SHADER);
@@ -160,7 +185,10 @@ export default class TrackScene extends Scene {
         // Load the models
         this.meshes['ground'] = MeshUtils.Plane(this.gl, {min:[0,0], max:[50,50]});
         this.meshes['player'] = MeshUtils.Sphere(this.gl);
+        if(this.debug)
         this.meshes['obstacle1']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["suzanne"]);
+        else
+        this.meshes['obstacle1']=MeshUtils.Cube(this.gl);
         this.meshes['track']=MeshUtils.LoadOBJMesh(this.gl,this.game.loader.resources["track"]);
         this.meshes['pbb'] = MeshUtils.Cube(this.gl);
         this.meshes['obb'] = MeshUtils.Cube(this.gl);
@@ -221,22 +249,6 @@ export default class TrackScene extends Scene {
             aabb : new AABB(this.meshes['player']),
             physics : null
         };
-        /*this.objects['obstacle1'] = {
-            mesh: this.meshes['obstacle1'],
-            material: {albedo: this.textures['snow.albedo'],
-            albedo_tint: vec3.fromValues(1, 1, 1),
-            specular: this.textures['snow.specular'],
-            specular_tint: vec3.fromValues(1, 1, 1),
-            roughness: this.textures['snow.roughness'],
-            roughness_scale: 1,
-            emissive: this.textures['black'],
-            emissive_tint: vec3.fromValues(1, 1, 1),
-            ambient_occlusion: this.textures['white']},
-            modelMatrix: mat4.create(),
-            aabb : new AABB(this.meshes['obstacle1']),
-            physics : null
-        };
-        console.log(this.objects['obstacle1'].aabb);*/
         this.objects['obb'] = {
             mesh: this.meshes['obb'],
             material: {
@@ -351,9 +363,9 @@ export default class TrackScene extends Scene {
         ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
         this.controller.update(deltaTime); // Update camera
         //if (SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ) && (this.ingame||this.gameOver) )
-        console.log(this.doescollied);
         if ( this.doescollied && (this.ingame||this.gameOver) )
         {
+            this.move=false;
             this.gameOver = true;
             this.currentEffect = "kernel";
             ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -376,7 +388,7 @@ export default class TrackScene extends Scene {
             this.Punish = 0;
             this.time +=deltaTime;
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            this.currScore += 1;
+            this.currScore += this.para.system.scoreinc;
             ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
         }
         else{
@@ -385,7 +397,7 @@ export default class TrackScene extends Scene {
                 this.Punish = this.Punish + 1
             if(this.currFrame%(Math.max( 1,20 - this.Punish)) == 0)
             {
-                this.currScore = Math.max(this.currScore - 1,0);
+                this.currScore = Math.max(this.currScore - this.para.system.scoredec,0);
             }
             ctx.fillText(`SCORE : ${this.currScore}`, canvas.width/2, canvas.height/24);
 
@@ -403,7 +415,7 @@ export default class TrackScene extends Scene {
             this.objects['ground'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.create(), vec3.fromValues(0, -1, -70), vec3.fromValues(1, 1, 1));
             this.objects['player'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(), quat.fromEuler(quat.create(), -360*this.time/1000, 0, 0), vec3.fromValues(0, 0, 0), vec3.fromValues(1, 1, 1))
             //this.objects['obstacle1'].modelMatrix = mat4.fromRotationTranslationScale(mat4.create(),quat.fromEuler(quat.create(), 0, -0*this.obstacletime/10000, 0),
-            vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
+            //vec3.fromValues(10*triangle(this.obstacletime/1000),1,-10+this.time/100%20), vec3.fromValues(3, 1, 1));
             //var mt1 = mat4.multiply(mat4.create(),this.objects['obstacle1'].modelMatrix,this.objects['obstacle1'].aabb.t);
             //var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
             //this.objects['obb'].modelMatrix = mt1;
@@ -458,14 +470,7 @@ export default class TrackScene extends Scene {
                     program.setUniform1i("material.ambient_occlusion", 4);
                     
                     // Draw the object
-                    
-                    if (name.substr(0,3) =='obb' )
-                    {
-                        obj.mesh.draw(this.gl.LINE_LOOP);
-                        
-                    }
-                    else
-                        obj.mesh.draw(this.gl.TRIANGLES);
+                    obj.mesh.draw(this.gl.TRIANGLES);
                 }
                 this.updateobstacles(deltaTime);
                 for(let i=0;i<3;i++){      
@@ -520,17 +525,19 @@ export default class TrackScene extends Scene {
                         var mt2 = mat4.multiply(mat4.create(),this.objects['player'].modelMatrix,this.objects['player'].aabb.t);
                         this.objects['obb'].modelMatrix = mt1;
                         this.objects['obb'].mesh.draw(this.gl.LINE_LOOP);
-                        console.log(SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix ));
+            
                         this.doescollied=this.doescollied||SphereCollides(1,vec3.create(),this.objects['player'].aabb, this.objects['obb'].aabb, this.objects['player'].modelMatrix,this.objects['obb'].modelMatrix );
+                        if(this.debug)
+                        {
                         if (name =='obb' )
                         {
                             obj.mesh.draw(this.gl.LINE_LOOP);
-                            
                         }
                         else if (name == 'pbb' )
                         {
     
                         }
+                    }
                         else
                             obj.mesh.draw(this.gl.TRIANGLES);
                     }
@@ -611,7 +618,7 @@ export default class TrackScene extends Scene {
             randoms.push(Math.round(Math.random() * 3+1));
         }   
     for (let i = 0; i < 3; i++) {
-            this.obstacles[i]=new Obstacle(randoms[i],-10-i*10,this.textures,this.gl,this.meshes['obstacle1']);
+            this.obstacles[i]=new Obstacle(randoms[i],-10-i*10,this.textures,this.gl,this.meshes['obstacle1'],this.para.system.speed);
         }
     }
     public updateobstacles(deltaTime:number){
@@ -620,11 +627,11 @@ export default class TrackScene extends Scene {
                 for(let name in this.obstacles[i].Objects){
                     if(this.obstacles[i].Objects[name].physics.pos[2]>10)
                         {
-                            this.obstacles[i]=new Obstacle(Math.round(Math.random() * 3+1),-30,this.textures,this.gl,this.meshes['obstacle1']);
+                            this.obstacles[i]=new Obstacle(Math.round(Math.random() * 3+1),-30,this.textures,this.gl,this.meshes['obstacle1'],this.para.system.speed);
                             
                         }
                      if(this.move)
-                        this.obstacles[i].Objects[name].physics.velocity[2]=0.01;
+                        this.obstacles[i].Objects[name].physics.velocity[2]=0.01*this.para.system.zspeed;
                     else
                         this.obstacles[i].Objects[name].physics.velocity[2]=0;
                      

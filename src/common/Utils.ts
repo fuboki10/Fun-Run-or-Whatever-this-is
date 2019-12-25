@@ -51,6 +51,7 @@ export interface SpotLight {
 };
 
 
+
 // This union type: it can be any of the specified types
 export type Light = AmbientLight | DirectionalLight | PointLight | SpotLight;
 
